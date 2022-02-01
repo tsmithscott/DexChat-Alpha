@@ -2,7 +2,7 @@ from modules.crypto import Crypto
 import base64
 
 
-handler = Crypto()
+handler = Crypto(windows=True)
 
 chat = open("crypt/chat.enc", "wb")
 
