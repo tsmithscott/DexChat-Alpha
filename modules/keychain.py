@@ -33,7 +33,7 @@ class Keychain:
         try:
             return keyring.get_password("sfe-cw1", pub_key)
         except RuntimeError as error:
-            return False
+            print(error)
 
     @staticmethod
     def add_auth(username: str, password_hash: str) -> bool:

@@ -8,7 +8,7 @@ from modules.keychain import Keychain
 
 
 class Crypto:
-    def __init__(self, windows = False):
+    def __init__(self, windows=False):
         self.priv_key = None
         self.pub_key = None
         self.pub_key_instance = None
