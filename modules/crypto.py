@@ -4,11 +4,11 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 
-from modules.key import Keychain
+from modules.keychain import Keychain
 
 
 class Crypto:
-    def __init__(self):
+    def __init__(self, windows = False):
         self.priv_key = None
         self.pub_key = None
         self.pub_key_instance = None
@@ -19,15 +19,18 @@ class Crypto:
             if self.key_exists():
                 self.pub_key = self.keychain.fetch_pub()
             else:
-                self.generate_key()
-        except RuntimeError:
-            self.generate_key()
+                if windows:
+                    self.generate_key(1024)
+                else:
+                    self.generate_key(4096)
+        except RuntimeError as error:
+            print(error)
 
-    def generate_key(self):
+    def generate_key(self, size: int):
         # Generate key objects
         self.priv_key = rsa.generate_private_key(
             public_exponent=65537,
-            key_size=4096,
+            key_size=size,
             backend=default_backend()
         )
 
@@ -53,7 +56,7 @@ class Crypto:
     def key_exists() -> bool:
         if os.path.exists("crypt/pub.enc"):
             with open("crypt/pub.enc", "r") as enc_file:
-                if enc_file.read():
+                if len(enc_file.read()) > 1:
                     return True
                 else:
                     return False

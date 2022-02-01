@@ -1,6 +1,8 @@
-from modules import Crypto
+from modules.crypto import Crypto
 import base64
+import zlib
+from dahuffman import HuffmanCodec
 
-handler = Crypto()
+# handler = Crypto()
 
-chat = open("crypt/chat.enc", "rb")
+# chat = open("crypt/chat.enc", "wb")
