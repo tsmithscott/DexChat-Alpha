@@ -5,7 +5,7 @@ import urllib.request as req
 
 
 I_HOST = "192.168.1.11"
-E_HOST = req.urlopen("https://ifconfig.me/ip").read().decode("utf8")
+E_HOST = req.urlopen("https://ifconfig.me/ip").read().decode("utf-8")
 PORT = 25000
 BUFFER = 2048
 ADDRESS = (I_HOST, PORT)
@@ -26,6 +26,9 @@ def incoming_connections():
 
         print(f"{peer_address[0]}: Connected.")
 
+        for connected_peers in addresses:
+            connected_peers.send(bytes(f"{addresses[peer][0]}: Connected", "utf8"))
+
         Thread(target=handle_peers, args=(peer,)).start()
 
 
@@ -36,9 +39,22 @@ def handle_peers(peer):
 
         if peer_message.decode() != "{disconnect}\n":
             print(f"{addresses[peer][0]}: {peer_message.decode()}")
+
+            for connected_peers in addresses:
+                if connected_peers == peer:
+                    pass
+                else:
+                    connected_peers.send(bytes(f"{addresses[peer][0]}: {peer_message.decode()}", "utf8"))
         else:
             peer.send(bytes("{ack_disconnect}", "utf8"))
             peer.close()
+
+            for connected_peers in addresses:
+                if connected_peers == peer:
+                    pass
+                else:
+                    connected_peers.send(bytes(f"{addresses[peer][0]}: Disconnected.", "utf8"))
+
             print(f"{addresses[peer][0]}: Disconnected.")
             del addresses[peer]
             break
