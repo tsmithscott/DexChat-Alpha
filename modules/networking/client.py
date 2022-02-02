@@ -4,7 +4,7 @@ import sys
 
 
 class Client:
-    def __init__(self, ip_addr, port):
+    def __init__(self, ip_addr: str, port: int):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.connect((ip_addr, port))
 

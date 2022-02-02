@@ -5,7 +5,7 @@ import threading
 
 
 class Server:
-    def __init__(self, ip_addr: str, port):
+    def __init__(self, ip_addr: str, port: int):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.peers = []
