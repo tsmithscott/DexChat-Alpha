@@ -1,34 +1,55 @@
-import socket
-import select
 import sys
+from socket import socket, AF_INET, SOCK_STREAM, SO_REUSEADDR, SOL_SOCKET
+from threading import Thread
 
 
-class Client:
-    def __init__(self, ip_addr: str, port: int):
-        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server.connect((ip_addr, port))
+def die():
+    quit()
 
-    def send_message(self):
-        socket_list = [sys.stdin, self.server]
 
-        # Problem is with select() method - supports only sockets on Windows
-        read_sockets, write_socket, error_socket = select.select(socket_list, [], [])
+def receive():
+    """Handles incoming messages"""
+    while True:
+        try:
+            server_message = peer_socket.recv(BUFFER).decode("utf8")
 
-        for socks in socket_list:
-            if socks == self.server:
-                message = socks.recv(2048)
-                print(message)
+            if server_message == "{ack_disconnect}":
+                print(server_message)
+                global DEAD
+                DEAD = True
+                quit()
+
             else:
-                message = sys.stdin.readline()
-                self.server.send(message.encode())
-                sys.stdin.flush()
+                print(f"{server_message}")
+        except OSError as error:
+            print(error)
+            break
 
-    def receive_message(self):
-        pass
 
-    def send_audio(self):
-        pass
+def send():
+    """Use sys.stdin and send message"""
+    while True:
+        global DEAD
+        if DEAD:
+            break
+        peer_message = sys.stdin.readline()
+        peer_socket.send(bytes(peer_message, "utf8"))
 
-    def receive_audio(self):
-        pass
 
+SERVER_HOST = "192.168.1.11"
+SERVER_PORT = 25000
+BUFFER = 2048
+ADDRESS = (SERVER_HOST, SERVER_PORT)
+
+peer_socket = socket(AF_INET, SOCK_STREAM)
+peer_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+peer_socket.connect(ADDRESS)
+
+DEAD = False
+
+receive_thread = Thread(target=receive)
+send_thread = Thread(target=send)
+receive_thread.start()
+send_thread.start()
+receive_thread.join()
+send_thread.join()

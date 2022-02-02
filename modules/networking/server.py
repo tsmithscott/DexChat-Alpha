@@ -1,65 +1,63 @@
-import socket
-import select
 import sys
-import threading
+from socket import socket, AF_INET, SOCK_STREAM, SO_REUSEADDR, SOL_SOCKET
+from threading import Thread
 
 
-class Server:
-    def __init__(self, ip_addr: str, port: int):
-        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.peers = []
+HOST = "192.168.1.11"
+PORT = 25000
+BUFFER = 2048
+ADDRESS = (HOST, PORT)
 
-        try:
-            self.server.bind((ip_addr, port))
-            self.server.listen(50)
-        except RuntimeError as error:
-            print(error)
+peers = {}
+addresses = {}
 
-    def send_message(self, ip_addr, message):
-        current_connection = None
+server = socket(AF_INET, SOCK_STREAM)
+server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+server.bind(ADDRESS)
 
-        for peer in self.peers:
-            if peer[0][0] == ip_addr:
-                current_connection = peer[1]
 
-        try:
-            current_connection.send(message)
-        except RuntimeError:
-            current_connection.close()
+def incoming_connections():
+    """Handle all incoming connections"""
+    while True:
+        peer, peer_address = server.accept()
+        addresses[peer] = peer_address
 
-            for peer in self.peers:
-                if peer[0][0] == ip_addr:
-                    self.peers.remove(self.peers.index(peer))
+        print(f"{peer_address}: Connected.")
 
-    def receive_message(self, connection, address):
-        while True:
-            try:
-                message = connection.recv(2048)
+        Thread(target=handle_peers, args=(peer,)).start()
 
-                if message:
-                    print(f"[{address[0]}]: {message.decode()}")
-                else:
-                    for peer in self.peers:
-                        if peer[0][0] == address:
-                            self.peers.remove(self.peers.index(peer))
-            except RuntimeError:
-                continue
 
-    def send_audio(self):
-        pass
+def handle_peers(peer):
+    """Takes a socket as argument and handles a single peer connection in a thread."""
+    while True:
+        peer_message = peer.recv(BUFFER)
 
-    def receive_audio(self):
-        pass
+        if peer_message.decode() != "{disconnect}\n":
+            print(f"{addresses[peer]}: {peer_message.decode()}")
+        else:
+            peer.send(bytes("{ack_disconnect}", "utf8"))
+            peer.close()
+            print(f"{addresses[peer]}: Disconnected.")
+            del addresses[peer]
+            break
 
-    def accept(self):
-        connection, addr = self.server.accept()
 
-        self.peers.append([addr, connection])
+def send_message():
+    """Use sys.stdin to send message to connected clients."""
+    while True:
+        server_message = sys.stdin.readline()
 
-        print(addr[0] + " connected.")
+        for peer in addresses:
+            peer.send(bytes(f"{HOST}: {server_message}", "utf8"))
 
-        threading.Thread(self.receive_message(connection, addr))
 
-    def close(self):
-        self.server.close()
+if __name__ == '__main__':
+    server.listen(1)
+    print("Waiting for connections...")
+    incoming_thread = Thread(target=incoming_connections)
+    send_thread = Thread(target=send_message)
+    incoming_thread.start()
+    send_thread.start()
+    incoming_thread.join()
+    send_thread.join()
+    server.close()
