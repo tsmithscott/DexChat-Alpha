@@ -22,7 +22,7 @@ def incoming_connections():
         peer, peer_address = server.accept()
         addresses[peer] = peer_address
 
-        print(f"{peer_address}: Connected.")
+        print(f"{peer_address[0]}: Connected.")
 
         Thread(target=handle_peers, args=(peer,)).start()
 
@@ -33,7 +33,7 @@ def handle_peers(peer):
         peer_message = peer.recv(BUFFER)
 
         if peer_message.decode() != "{disconnect}\n":
-            print(f"{addresses[peer]}: {peer_message.decode()}")
+            print(f"{addresses[peer][0]}: {peer_message.decode()}")
         else:
             peer.send(bytes("{ack_disconnect}", "utf8"))
             peer.close()
