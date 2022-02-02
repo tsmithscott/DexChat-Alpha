@@ -29,11 +29,13 @@ def receive():
 def send():
     """Use sys.stdin and send message"""
     while True:
-        global DEAD
-        if DEAD:
-            break
         peer_message = sys.stdin.readline()
-        peer_socket.send(bytes(peer_message, "utf8"))
+
+        if peer_message == "{disconnect}\n":
+            peer_socket.send(bytes(peer_message, "utf8"))
+            quit()
+        else:
+            peer_socket.send(bytes(peer_message, "utf8"))
 
 
 SERVER_HOST = "192.168.1.11"
