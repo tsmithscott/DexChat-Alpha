@@ -1,12 +1,14 @@
 import sys
 from socket import socket, AF_INET, SOCK_STREAM, SO_REUSEADDR, SOL_SOCKET
 from threading import Thread
+import urllib.request as req
 
 
-HOST = "192.168.1.11"
+I_HOST = "192.168.1.11"
+E_HOST = req.urlopen("https://ifconfig.me/ip").read().decode("utf8")
 PORT = 25000
 BUFFER = 2048
-ADDRESS = (HOST, PORT)
+ADDRESS = (I_HOST, PORT)
 
 peers = {}
 addresses = {}
@@ -37,7 +39,7 @@ def handle_peers(peer):
         else:
             peer.send(bytes("{ack_disconnect}", "utf8"))
             peer.close()
-            print(f"{addresses[peer]}: Disconnected.")
+            print(f"{addresses[peer][0]}: Disconnected.")
             del addresses[peer]
             break
 
@@ -48,11 +50,11 @@ def send_message():
         server_message = sys.stdin.readline()
 
         for peer in addresses:
-            peer.send(bytes(f"{HOST}: {server_message}", "utf8"))
+            peer.send(bytes(f"{E_HOST}: {server_message}", "utf8"))
 
 
 if __name__ == '__main__':
-    server.listen(1)
+    server.listen(5)
     print("Waiting for connections...")
     incoming_thread = Thread(target=incoming_connections)
     send_thread = Thread(target=send_message)

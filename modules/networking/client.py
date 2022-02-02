@@ -38,7 +38,7 @@ def send():
             peer_socket.send(bytes(peer_message, "utf8"))
 
 
-SERVER_HOST = "192.168.1.11"
+SERVER_HOST = "82.0.10.30"
 SERVER_PORT = 25000
 BUFFER = 2048
 ADDRESS = (SERVER_HOST, SERVER_PORT)
