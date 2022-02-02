@@ -17,6 +17,8 @@ class Server:
             print(error)
 
     def send_message(self, ip_addr, message):
+        current_connection = None
+
         for peer in self.peers:
             if peer[0][0] == ip_addr:
                 current_connection = peer[1]

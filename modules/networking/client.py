@@ -11,6 +11,7 @@ class Client:
     def send_message(self):
         socket_list = [sys.stdin, self.server]
 
+        # Problem is with select() method - supports only sockets on Windows
         read_sockets, write_socket, error_socket = select.select(socket_list, [], [])
 
         for socks in socket_list:
