@@ -1,4 +1,4 @@
-from modules.crypto import Crypto
+from modules.encryption.crypto import Crypto
 import base64
 
 
