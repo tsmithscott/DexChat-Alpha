@@ -4,10 +4,6 @@ from socket import socket, AF_INET, SOCK_STREAM, SO_REUSEADDR, SOL_SOCKET
 from threading import Thread
 
 
-def die():
-    quit()
-
-
 def receive():
     """Handles incoming messages"""
     while True:
@@ -15,10 +11,8 @@ def receive():
             server_message = peer_socket.recv(BUFFER).decode("utf8")
 
             if server_message == "{ack_disconnect}":
-                print(server_message)
-                global DEAD
-                DEAD = True
-                quit()
+                print("[Disconnected]")
+                break
 
             else:
                 print(f"{server_message}")
@@ -30,29 +24,43 @@ def receive():
 def send():
     """Use sys.stdin and send message"""
     while True:
-        peer_message = sys.stdin.readline()
+        peer_message = sys.stdin.readline().strip()
 
-        if peer_message == "{disconnect}\n":
+        if peer_message == "{disconnect}":
             peer_socket.send(bytes(peer_message, "utf8"))
-            quit()
+            break
         else:
             peer_socket.send(bytes(peer_message, "utf8"))
 
 
-SERVER_HOST = "82.0.10.30"
-SERVER_PORT = 25000
-BUFFER = 2048
-ADDRESS = (SERVER_HOST, SERVER_PORT)
+if __name__ == "__main__":
 
-peer_socket = socket(AF_INET, SOCK_STREAM)
-peer_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-peer_socket.connect(ADDRESS)
+    while True:
+        sys.stdout.write("Enter server address (IP:Port): ")
+        address_input = sys.stdin.readline().split(":")
 
-DEAD = False
+        SERVER_HOST = address_input[0]
+        SERVER_PORT = int(address_input[1])
+        BUFFER = 2048
+        ADDRESS = (SERVER_HOST, SERVER_PORT)
 
-receive_thread = Thread(target=receive)
-send_thread = Thread(target=send)
-receive_thread.start()
-send_thread.start()
-receive_thread.join()
-send_thread.join()
+        peer_socket = socket(AF_INET, SOCK_STREAM)
+        peer_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        peer_socket.connect(ADDRESS)
+
+        receive_thread = Thread(target=receive)
+        send_thread = Thread(target=send)
+        receive_thread.start()
+        send_thread.start()
+        receive_thread.join()
+        send_thread.join()
+
+        restart = True
+        while True:
+            sys.stdout.write("Run again? (Y/n) ")
+            restart = sys.stdin.readline().strip().lower()
+            if restart == 'y':
+                break
+            elif restart == 'n':
+                quit()
+

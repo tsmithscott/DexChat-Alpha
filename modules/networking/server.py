@@ -1,10 +1,10 @@
 import sys
-from socket import socket, AF_INET, SOCK_STREAM, SO_REUSEADDR, SOL_SOCKET
+import socket
 from threading import Thread
 import urllib.request as req
 
 
-I_HOST = "192.168.1.11"
+I_HOST = socket.gethostbyname(socket.gethostname())
 E_HOST = req.urlopen("https://ifconfig.me/ip").read().decode("utf-8")
 PORT = 25000
 BUFFER = 2048
@@ -13,8 +13,8 @@ ADDRESS = (I_HOST, PORT)
 peers = {}
 addresses = {}
 
-server = socket(AF_INET, SOCK_STREAM)
-server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind(ADDRESS)
 
 
@@ -24,10 +24,13 @@ def incoming_connections():
         peer, peer_address = server.accept()
         addresses[peer] = peer_address
 
-        print(f"{peer_address[0]}: Connected.")
+        print(f"[{peer_address[0]} Connected]")
 
         for connected_peers in addresses:
-            connected_peers.send(bytes(f"{addresses[peer][0]}: Connected", "utf8"))
+            if connected_peers == peer:
+                peer.send(bytes(f"[Connected]", "utf8"))
+            else:
+                connected_peers.send(bytes(f"[{peer_address[0]} Connected]", "utf8"))
 
         Thread(target=handle_peers, args=(peer,)).start()
 
@@ -37,7 +40,7 @@ def handle_peers(peer):
     while True:
         peer_message = peer.recv(BUFFER)
 
-        if peer_message.decode() != "{disconnect}\n":
+        if peer_message.decode() != "{disconnect}":
             print(f"{addresses[peer][0]}: {peer_message.decode()}")
 
             for connected_peers in addresses:
@@ -53,9 +56,9 @@ def handle_peers(peer):
                 if connected_peers == peer:
                     pass
                 else:
-                    connected_peers.send(bytes(f"{addresses[peer][0]}: Disconnected.", "utf8"))
+                    connected_peers.send(bytes(f"[{addresses[peer][0]} Disconnected]", "utf8"))
 
-            print(f"{addresses[peer][0]}: Disconnected.")
+            print(f"[{addresses[peer][0]} Disconnected]")
             del addresses[peer]
             break
 
@@ -63,15 +66,16 @@ def handle_peers(peer):
 def send_message():
     """Use sys.stdin to send message to connected clients."""
     while True:
-        server_message = sys.stdin.readline()
-
+        server_message = sys.stdin.readline().strip()
         for peer in addresses:
             peer.send(bytes(f"{E_HOST}: {server_message}", "utf8"))
 
 
 if __name__ == '__main__':
     server.listen(5)
-    print("Waiting for connections...")
+    print(f"Hosts on local network connect using: {I_HOST}:{str(PORT)}"
+          f"\nExternal hosts connect using: {E_HOST}:{str(PORT)}"
+          "\n\nWaiting for connections...")
     incoming_thread = Thread(target=incoming_connections)
     send_thread = Thread(target=send_message)
     incoming_thread.start()
