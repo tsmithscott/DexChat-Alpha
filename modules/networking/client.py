@@ -1,6 +1,5 @@
 import sys
-import time
-from socket import socket, AF_INET, SOCK_STREAM, SO_REUSEADDR, SOL_SOCKET
+import socket
 from threading import Thread
 
 
@@ -12,14 +11,11 @@ def receive():
     """Handles incoming messages"""
     while True:
         try:
-            server_message = peer_socket.recv(BUFFER).decode("utf8")
+            server_message = peer_socket.recv(BUFFER).decode("utf8").strip()
 
             if server_message == "{ack_disconnect}":
-                print(server_message)
-                global DEAD
-                DEAD = True
+                print("[Disconnected]")
                 quit()
-
             else:
                 print(f"{server_message}")
         except OSError as error:
@@ -30,29 +26,28 @@ def receive():
 def send():
     """Use sys.stdin and send message"""
     while True:
-        peer_message = sys.stdin.readline()
+        peer_message = sys.stdin.readline().strip()
 
-        if peer_message == "{disconnect}\n":
+        if peer_message == "{disconnect}":
             peer_socket.send(bytes(peer_message, "utf8"))
             quit()
         else:
             peer_socket.send(bytes(peer_message, "utf8"))
 
 
-SERVER_HOST = "82.0.10.30"
-SERVER_PORT = 25000
-BUFFER = 2048
-ADDRESS = (SERVER_HOST, SERVER_PORT)
+if __name__ == "__main__":
+    SERVER_HOST = socket.gethostbyname(socket.gethostname())
+    SERVER_PORT = 25000
+    BUFFER = 2048
+    ADDRESS = (SERVER_HOST, SERVER_PORT)
 
-peer_socket = socket(AF_INET, SOCK_STREAM)
-peer_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-peer_socket.connect(ADDRESS)
+    peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    peer_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    peer_socket.connect(ADDRESS)
 
-DEAD = False
-
-receive_thread = Thread(target=receive)
-send_thread = Thread(target=send)
-receive_thread.start()
-send_thread.start()
-receive_thread.join()
-send_thread.join()
+    receive_thread = Thread(target=receive)
+    send_thread = Thread(target=send)
+    receive_thread.start()
+    send_thread.start()
+    receive_thread.join()
+    send_thread.join()
