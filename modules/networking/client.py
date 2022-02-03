@@ -1,5 +1,4 @@
 import sys
-import time
 from socket import socket, AF_INET, SOCK_STREAM, SO_REUSEADDR, SOL_SOCKET
 from threading import Thread
 
