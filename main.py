@@ -15,9 +15,7 @@ class GUI(tk.Frame):
 
         """==========Widgets for startup_frame========== """
 
-
         """==========Widgets for connect_frame=========="""
-
 
         """==========Widgets for messages_frame=========="""
         client_message = tk.StringVar()
@@ -39,9 +37,6 @@ class GUI(tk.Frame):
         entry_field.pack()
         send_button.pack()
         """==========Widgets for voice_frame=========="""
-
-
-
 
         # root.protocol("WM_DELETE_WINDOW", close)
 
