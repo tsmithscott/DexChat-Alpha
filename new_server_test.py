@@ -1,16 +1,16 @@
 import threading
 
 from modules.networking.node import Node
-from modules.networking.server.node_server import NodeServer
 
 
 handler = Node()
-server = NodeServer(handler)
+server = handler.s_node
 while True:
     try:
-        conn, addr = server.sock.accept()
+        conn, addr = server.server.accept()
         handler.add_peer((conn, addr))
-        t = threading.Thread(target=server.receive_message, args=(conn, addr))
+        client = handler.c_node
+        t = threading.Thread(target=server.listen, args=(conn, addr))
         t.setDaemon(True)
         t.start()
     except KeyboardInterrupt:
