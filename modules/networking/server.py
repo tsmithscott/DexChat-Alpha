@@ -48,7 +48,7 @@ def server():
                             SOCKET_LIST.remove(sock)
 
                         broadcast(server_socket, sock, f"[SERVER] Client {name} disconnected!")
-                except:
+                except RuntimeError:
                     continue
 
 
@@ -58,7 +58,7 @@ def broadcast(server_socket, sock_obj, message):
         if sock != server_socket and sock != sock_obj:
             try:
                 sock.send(message.encode())
-            except:
+            except RuntimeError:
                 # Selected socket is broken.
                 sock.close()
 
