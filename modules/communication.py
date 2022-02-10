@@ -1,42 +1,46 @@
 import socket
-import threading
 
 
-class Server:
-    def __init__(self):
-        self.PEERS = []
+class Connection:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server.bind((socket.gethostname(), 25000))
-
-    def run(self):
+        self.server.bind(("0.0.0.0", 25000))
         self.server.listen(5)
-        while True:
-            conn, addr = self.server.accept()
-            self.PEERS.append((conn, addr))
-            conn.send(f"Connected! ".encode())
-            threading.Thread(target=self.receive, args=(conn, ), daemon=True).start()
 
-    def receive(self, connection):
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    def server_accept(self):
+        while True:
+            connection, address = self.server.accept()
+
+            self.server_receive(connection)
+
+    def server_receive(self, connection):
         while True:
             message = connection.recv(4096)
-            print(message.decode())
 
+            if message:
+                print(message.decode())
+            else:
+                connection.close()
 
-class Client:
-    def __init__(self, host, port):
-        self.PEERS = []
-        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.client.connect((host, port))
-        self.client.listen(5)
-
-    def update(self, peers):
-        self.PEERS = peers
-
-    def send(self):
+    def client_send(self):
         while True:
             message = input("Message: ")
 
-            self.client.send(message.encode())
-
+            if message == "/connect":
+                try:
+                    self.client.connect((self.host, self.port))
+                except ConnectionError as error:
+                    print(error)
+            elif message == "/disconnect":
+                try:
+                    self.client.close()
+                except ConnectionError as error:
+                    print(error)
+            else:
+                self.client.send(message.encode())
