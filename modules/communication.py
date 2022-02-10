@@ -1,7 +1,8 @@
 import socket
+import sys
 
 
-class Connection:
+class SingleConnection:
     def __init__(self, host, port):
         self.host = host
         self.port = port
@@ -21,12 +22,16 @@ class Connection:
 
     def server_receive(self, connection):
         while True:
-            message = connection.recv(4096)
+            try:
+                message = connection.recv(4096)
 
-            if message:
-                print(message.decode())
-            else:
+                if message.decode() == "/disconnect":
+                    sys.exit()
+                else:
+                    print(message.decode())
+            except OSError:
                 connection.close()
+                sys.exit()
 
     def client_send(self):
         while True:
@@ -39,7 +44,9 @@ class Connection:
                     print(error)
             elif message == "/disconnect":
                 try:
+                    self.client.send(message.encode())
                     self.client.close()
+                    sys.exit()
                 except ConnectionError as error:
                     print(error)
             else:
