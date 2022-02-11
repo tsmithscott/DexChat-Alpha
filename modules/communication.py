@@ -20,7 +20,8 @@ class SingleConnection:
 
             self.server_receive(connection)
 
-    def server_receive(self, connection):
+    @staticmethod
+    def server_receive(connection):
         while True:
             try:
                 message = connection.recv(4096)
