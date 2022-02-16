@@ -1,12 +1,14 @@
 import socket
 import sys
+import threading
 
 
 class SingleConnection:
     def __init__(self, host, port):
+        self.PEERS = []
+
         self.host = host
         self.port = port
-
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind(("0.0.0.0", 25000))
@@ -18,7 +20,9 @@ class SingleConnection:
         while True:
             connection, address = self.server.accept()
 
-            self.server_receive(connection)
+            self.PEERS.append((connection, address))
+
+            threading.Thread(target=self.server_receive, args=(connection,), daemon=True).start()
 
     @staticmethod
     def server_receive(connection):
@@ -27,6 +31,7 @@ class SingleConnection:
                 message = connection.recv(4096)
 
                 if message.decode() == "/disconnect":
+                    connection.close()
                     sys.exit()
                 else:
                     print(message.decode())
@@ -45,10 +50,16 @@ class SingleConnection:
                     print(error)
             elif message == "/disconnect":
                 try:
-                    self.client.send(message.encode())
-                    self.client.close()
+                    for peer in self.PEERS:
+                        self.client.close()
+                        self.client.connect(peer[0][1])
+                        self.client.send(message.encode())
                     sys.exit()
                 except ConnectionError as error:
                     print(error)
             else:
-                self.client.send(message.encode())
+                for peer in self.PEERS:
+                    self.client.close()
+                    print(peer)
+                    self.client.connect(peer[1])
+                    self.client.send(message.encode())
