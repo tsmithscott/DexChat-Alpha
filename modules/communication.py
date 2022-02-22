@@ -20,7 +20,7 @@ class SingleConnection:
             connection, address = self.server.accept()
 
             if address[0] in self.peers.keys():
-                initiate = threading.Thread(target=self.server_receive, args=(connection,))
+                initiate = threading.Thread(target=self.server_receive, args=(connection, address))
                 initiate.start()
             else:
                 new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
