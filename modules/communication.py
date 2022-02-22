@@ -27,7 +27,6 @@ class Network:
                 sys.exit()
 
             connection, address = self.server.accept()
-            self.server.settimeout(3)
 
             if address[0] in self.peers.keys():
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
