@@ -5,7 +5,7 @@ import json
 import requests
 
 
-class SingleConnection:
+class Network:
     def __init__(self, host, port):
         self.peers = {}
         self.peer_filter = {}
@@ -76,8 +76,11 @@ class SingleConnection:
                     print(error)
             elif message == "/disconnect":
                 try:
-                    self.client.send(message.encode())
-                    self.client.close()
+                    for address in self.peers:
+                        self.peers.get(address).send(message.encode())
+                        self.peers.get(address).close()
+                    # self.client.send(message.encode())
+                    # self.client.close()
                     sys.exit()
                 except ConnectionError as error:
                     print(error)
