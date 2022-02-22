@@ -49,6 +49,7 @@ class SingleConnection:
                     sys.exit()
                 elif "peer_filter" in message.decode():
                     peer_filter = message.decode().split("+")
+                    print(peer_filter)
                     peer_filter = json.loads(peer_filter)
 
                     print(self.peers)
