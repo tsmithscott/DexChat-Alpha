@@ -1,11 +1,13 @@
 import socket
 import sys
 import threading
+import json
 
 
 class SingleConnection:
     def __init__(self, host, port):
         self.peers = {}
+        self.peer_filter = {}
         self.host = host
         self.port = port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,6 +28,9 @@ class SingleConnection:
                 new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 new_client.connect((address[0], 25000))
                 self.peers[address[0]] = new_client
+                self.peer_filter[address[0]] = 25000
+
+                self.dispatch_peers()
 
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address))
                 initiate.start()
@@ -39,6 +44,17 @@ class SingleConnection:
                     del self.peers[address[0]]
                     connection.close()
                     sys.exit()
+                elif "peer_filter" in message.decode():
+                    peer_filter = message.decode().split("+")[1]
+                    peer_filter = json.loads(peer_filter)
+
+                    for address in peer_filter:
+                        if address not in self.peers:
+                            new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                            new_client.connect((address, self.peer_filter[address]))
+                            self.peers[address] = new_client
+
+                    del peer_filter
                 else:
                     sys.stdout.write(message.decode())
                     sys.stdout.flush()
@@ -67,3 +83,7 @@ class SingleConnection:
             else:
                 for address in self.peers:
                     self.peers.get(address).send(message.encode())
+
+    def dispatch_peers(self):
+        for address in self.peers:
+            self.peers.get(address).send(("peer_filter+" + json.dumps(self.peer_filter)).encode())
