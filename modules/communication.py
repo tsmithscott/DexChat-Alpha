@@ -46,14 +46,15 @@ class Network:
         while True:
             try:
                 message = connection.recv(4096)
+                print(connection, address)
 
-                if message.decode() == "/disconnect":
-                    if address[0] in self.peer_filter:
-                        del self.peer_filter[address[0]]
+                if "/disconnect" in message.decode():
+                    remote_ip = message.decode().split("+")[1]
 
-                    print(self.peers)
-                    print(address)
-                    del self.peers[address]
+                    if remote_ip in self.peer_filter:
+                        del self.peer_filter[remote_ip]
+
+                    del self.peers[remote_ip]
                     connection.close()
                     sys.exit()
                 elif "peer_filter" in message.decode():
@@ -86,7 +87,7 @@ class Network:
             elif message == "/disconnect":
                 try:
                     for address in self.peers:
-                        self.peers.get(address).send(message.encode())
+                        self.peers.get(address).send((message+self.my_ip).encode())
                         self.peers.get(address).close()
                     # self.client.send(message.encode())
                     # self.client.close()
