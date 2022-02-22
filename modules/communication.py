@@ -5,7 +5,7 @@ import threading
 
 class SingleConnection:
     def __init__(self, host, port):
-        self.peers = []
+        self.peers = {}
         self.host = host
         self.port = port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,21 +19,16 @@ class SingleConnection:
         while True:
             connection, address = self.server.accept()
 
-            print("working-1")
+            if address[0] in self.peers.keys():
+                initiate = threading.Thread(target=self.server_receive, args=(connection,))
+                initiate.start()
+            else:
+                new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                new_client.connect((address[0], 25000))
+                self.peers[address[0]] = new_client
 
-            new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-            print("2")
-            new_client.connect((address[0], 25000))
-
-            print("3")
-            self.peers.append(new_client)
-
-            print("working")
-            print(self.peers)
-
-            initiate = threading.Thread(target=self.server_receive, args=(connection,), daemon=True)
-            initiate.start()
+                initiate = threading.Thread(target=self.server_receive, args=(connection,))
+                initiate.start()
 
     @staticmethod
     def server_receive(connection):
@@ -45,7 +40,8 @@ class SingleConnection:
                     connection.close()
                     sys.exit()
                 else:
-                    print(message.decode())
+                    sys.stdout.write(message.decode())
+                    sys.stdout.flush()
             except OSError:
                 connection.close()
                 sys.exit()
@@ -57,7 +53,7 @@ class SingleConnection:
             if message == "/connect":
                 try:
                     self.client.connect((self.host, self.port))
-                    self.peers.append(self.client)
+                    self.peers[self.host] = self.client
                 except ConnectionError as error:
                     print(error)
             elif message == "/disconnect":
@@ -68,5 +64,5 @@ class SingleConnection:
                 except ConnectionError as error:
                     print(error)
             else:
-                for peer in self.peers:
-                    peer.send(message.encode())
+                for address in self.peers:
+                    self.peers.get(address).send(message.encode())
