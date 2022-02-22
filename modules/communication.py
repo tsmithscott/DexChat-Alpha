@@ -27,11 +27,10 @@ class SingleConnection:
                 new_client.connect((address[0], 25000))
                 self.peers[address[0]] = new_client
 
-                initiate = threading.Thread(target=self.server_receive, args=(connection,))
+                initiate = threading.Thread(target=self.server_receive, args=(connection, address))
                 initiate.start()
 
-    @staticmethod
-    def server_receive(connection):
+    def server_receive(self, connection, address):
         while True:
             try:
                 message = connection.recv(4096)
@@ -43,6 +42,7 @@ class SingleConnection:
                     sys.stdout.write(message.decode())
                     sys.stdout.flush()
             except OSError:
+                del self.peers[address[0]]
                 connection.close()
                 sys.exit()
 
