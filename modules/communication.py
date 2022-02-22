@@ -46,7 +46,6 @@ class Network:
         while True:
             try:
                 message = connection.recv(4096)
-                print(connection, address)
 
                 if "/disconnect" in message.decode():
                     remote_ip = message.decode().split("+")[1]
@@ -89,8 +88,6 @@ class Network:
                     for address in self.peers:
                         self.peers.get(address).send((message + "+" + self.my_ip).encode())
                         self.peers.get(address).close()
-                    # self.client.send(message.encode())
-                    # self.client.close()
                     self.ALIVE = False
                     sys.exit()
                 except ConnectionError as error:
