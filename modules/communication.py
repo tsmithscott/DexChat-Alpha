@@ -49,11 +49,7 @@ class SingleConnection:
                     sys.exit()
                 elif "peer_filter" in message.decode():
                     peer_filter = message.decode().split("+")[1]
-                    print(peer_filter)
                     peer_filter = json.loads(peer_filter)
-
-                    print(self.peers)
-                    print(peer_filter)
 
                     for address in peer_filter:
                         if address not in self.peers and not address == self.my_ip:
@@ -91,5 +87,4 @@ class SingleConnection:
 
     def dispatch_peers(self):
         for address in self.peers:
-            print(json.dumps(self.peer_filter).encode())
             self.peers.get(address).send(("peer_filter+" + json.dumps(self.peer_filter)).encode())
