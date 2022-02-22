@@ -2,6 +2,7 @@ import socket
 import sys
 import threading
 import json
+import requests
 
 
 class SingleConnection:
@@ -16,6 +17,8 @@ class SingleConnection:
         self.server.listen(5)
 
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self.my_ip = requests.get("https://ifconfig.me/ip").text
 
     def server_accept(self):
         while True:
@@ -49,7 +52,7 @@ class SingleConnection:
                     peer_filter = json.loads(peer_filter)
 
                     for address in peer_filter:
-                        if address not in self.peers:
+                        if address not in self.peers and not address == self.my_ip:
                             print(self.peers)
                             new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                             new_client.connect((address, self.peer_filter[address]))
