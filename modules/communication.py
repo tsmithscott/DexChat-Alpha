@@ -36,6 +36,7 @@ class SingleConnection:
                 message = connection.recv(4096)
 
                 if message.decode() == "/disconnect":
+                    del self.peers[address[0]]
                     connection.close()
                     sys.exit()
                 else:
