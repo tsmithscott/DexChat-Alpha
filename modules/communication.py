@@ -51,6 +51,7 @@ class Network:
                     if address[0] in self.peer_filter:
                         del self.peer_filter[address[0]]
 
+                    print(address, address[0])
                     del self.peers[address[0]]
                     connection.close()
                     sys.exit()
