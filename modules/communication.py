@@ -7,6 +7,7 @@ import requests
 
 class Network:
     def __init__(self, host, port):
+        self.ALIVE = True
         self.peers = {}
         self.peer_filter = {}
         self.host = host
@@ -39,7 +40,7 @@ class Network:
                 initiate.start()
 
     def server_receive(self, connection, address):
-        while True:
+        while self.ALIVE:
             try:
                 message = connection.recv(4096)
 
@@ -81,6 +82,7 @@ class Network:
                         self.peers.get(address).close()
                     # self.client.send(message.encode())
                     # self.client.close()
+                    self.ALIVE = False
                     sys.exit()
                 except ConnectionError as error:
                     print(error)
