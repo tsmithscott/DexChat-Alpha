@@ -16,14 +16,13 @@ class Network:
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind(("0.0.0.0", 25000))
         self.server.listen(5)
-        self.server.settimeout(3)
 
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         self.my_ip = requests.get("https://ifconfig.me/ip").text
 
     def server_accept(self):
-        while True:
+        while self.ALIVE:
             connection, address = self.server.accept()
 
             if address[0] in self.peers.keys():
@@ -41,7 +40,7 @@ class Network:
                 initiate.start()
 
     def server_receive(self, connection, address):
-        while self.ALIVE:
+        while True:
             try:
                 message = connection.recv(4096)
 
