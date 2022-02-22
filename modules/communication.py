@@ -48,7 +48,7 @@ class SingleConnection:
                     connection.close()
                     sys.exit()
                 elif "peer_filter" in message.decode():
-                    peer_filter = message.decode().split("+")
+                    peer_filter = message.decode().split("+")[1]
                     print(peer_filter)
                     peer_filter = json.loads(peer_filter)
 
@@ -60,8 +60,6 @@ class SingleConnection:
                             new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                             new_client.connect((address, self.peer_filter[address]))
                             self.peers[address] = new_client
-
-                    del peer_filter
                 else:
                     sys.stdout.write(message.decode())
                     sys.stdout.flush()
