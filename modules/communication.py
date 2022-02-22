@@ -25,7 +25,7 @@ class Network:
             connection, address = self.server.accept()
 
             if address[0] in self.peers.keys():
-                initiate = threading.Thread(target=self.server_receive, args=(connection, address))
+                initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
             else:
                 new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,7 +35,7 @@ class Network:
 
                 self.dispatch_peers()
 
-                initiate = threading.Thread(target=self.server_receive, args=(connection, address))
+                initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
 
     def server_receive(self, connection, address):
