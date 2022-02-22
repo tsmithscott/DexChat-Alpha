@@ -48,6 +48,7 @@ class Network:
                 message = connection.recv(4096)
 
                 if message.decode() == "/disconnect":
+                    print(self.peer_filter)
                     del self.peer_filter[address[0]]
                     del self.peers[address[0]]
                     connection.close()
