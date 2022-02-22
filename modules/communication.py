@@ -58,7 +58,7 @@ class SingleConnection:
                     for address in peer_filter:
                         if address not in self.peers and not address == self.my_ip:
                             new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            new_client.connect((address, self.peer_filter[address]))
+                            new_client.connect((address, self.peer_filter.get(address)))
                             self.peers[address] = new_client
                 else:
                     sys.stdout.write(message.decode())
