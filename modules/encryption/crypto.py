@@ -1,4 +1,5 @@
 import os
+from sys import platform
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -8,7 +9,7 @@ from modules.encryption.keychain import Keychain
 
 
 class Crypto:
-    def __init__(self, windows=False):
+    def __init__(self):
         self.priv_key = None
         self.pub_key = None
         self.pub_key_instance = None
@@ -19,7 +20,7 @@ class Crypto:
             if self.key_exists():
                 self.pub_key = self.keychain.fetch_pub()
             else:
-                if windows:
+                if platform == "win32":
                     self.generate_key(1024)
                 else:
                     self.generate_key(4096)
