@@ -44,7 +44,7 @@ class SingleConnection:
                 message = connection.recv(4096)
 
                 if message.decode() == "/disconnect":
-                    del self.peers[address[0]]
+                    del self.peers[address]
                     connection.close()
                     sys.exit()
                 elif "peer_filter" in message.decode():
@@ -65,7 +65,7 @@ class SingleConnection:
                     sys.stdout.write(message.decode())
                     sys.stdout.flush()
             except OSError:
-                del self.peers[address[0]]
+                del self.peers[address]
                 connection.close()
                 sys.exit()
 
@@ -92,4 +92,5 @@ class SingleConnection:
 
     def dispatch_peers(self):
         for address in self.peers:
+            print(json.dumps(self.peer_filter).encode())
             self.peers.get(address).send(("peer_filter+" + json.dumps(self.peer_filter)).encode())
