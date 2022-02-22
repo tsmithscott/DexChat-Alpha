@@ -87,7 +87,7 @@ class Network:
             elif message == "/disconnect":
                 try:
                     for address in self.peers:
-                        self.peers.get(address).send((message+self.my_ip).encode())
+                        self.peers.get(address).send((message + "+" + self.my_ip).encode())
                         self.peers.get(address).close()
                     # self.client.send(message.encode())
                     # self.client.close()
