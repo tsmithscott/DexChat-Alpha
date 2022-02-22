@@ -81,7 +81,6 @@ class Network:
                         self.peers.get(address).close()
                     # self.client.send(message.encode())
                     # self.client.close()
-                    self.server.close()
                     sys.exit()
                 except ConnectionError as error:
                     print(error)
