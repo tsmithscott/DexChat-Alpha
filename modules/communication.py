@@ -181,7 +181,7 @@ class ChatNetwork:
 
 
 class VoiceNetwork:
-    def __init__(self, host, port):
+    def __init__(self, host=None, port=None):
         # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
         self.my_ip = requests.get("https://ifconfig.me/ip").text
 
@@ -189,7 +189,7 @@ class VoiceNetwork:
         self.ALIVE = True
 
         # Create a peer discovery filter and a peer connection storage for multiple, simultaneous connections.
-        self.peers = []
+        self.peers = {}
         self.peer_filter = {}
 
         # Assign socket attributes.
@@ -199,7 +199,7 @@ class VoiceNetwork:
         # Create a server socket to receive voice packets from other clients.
         self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server.bind(("0.0.0.0", 26000))
+        self.server.bind(("0.0.0.0", 25000))
 
         # Create a client socket to send voice packets to other servers.
         self.client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -222,7 +222,7 @@ class VoiceNetwork:
         self.voice_frames = []
 
         # Activate initial connection
-        self.peers.append((self.host, 25000))
+        self.peers[self.host] = 25000
 
     def server_receive(self):
         """
@@ -239,12 +239,11 @@ class VoiceNetwork:
                 voice = datagram[0]
                 address = datagram[1]
 
-                if address not in self.peers:
-                    print("adding peer ", address)
-                    self.peers.append(address)
+                if address[0] not in self.peers:
+                    self.peers[address[0]] = 25000
 
                 if voice != '':
-                    self.streamer_output.write(voice)
+                    self.voice_frames.append(voice)
             # Broken connection.
             except OSError as error:
                 print(error)
@@ -260,7 +259,13 @@ class VoiceNetwork:
 
             for peer in self.peers:
                 print("sending to ", peer)
-                self.client.sendto(voice, peer)
+                self.client.sendto(voice, (peer, self.peers[peer]))
+
+    def play_voice(self):
+        while True:
+            for packet in self.voice_frames:
+                self.streamer_output.write(packet)
+                self.voice_frames.pop(self.voice_frames.index(packet))
 
     def dispatch_peers(self):
         """
