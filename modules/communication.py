@@ -1,13 +1,10 @@
 import socket
 import sys
 import threading
-import multiprocessing
 import json
 import requests
-import uuid
 
 import pyaudio
-import wave
 
 
 class ChatNetwork:
@@ -179,27 +176,22 @@ class ChatNetwork:
 
 
 class VoiceNetwork:
-    def __init__(self):
+    def __init__(self, server_object):
+        self.SERVER = server_object
         self.AUDIO_CHUNK = 1024
         self.AUDIO_FORMAT = pyaudio.paInt16
-        self.AUDIO_CHANNELS = 2
+        self.AUDIO_CHANNELS = 1
         self.AUDIO_RATE = 44100
         self.AUDIO_FRAMES = []
-        self.TEMP_OUT = f"crypt/temp/{uuid.uuid4().hex}.enco"
 
         self.audio_handler = pyaudio.PyAudio()
         self.stream_handler = None
 
-        self.enco_wave = wave.open(self.TEMP_OUT, "wb")
-        self.enco_wave.setnchannels(self.AUDIO_CHANNELS)
-        self.enco_wave.setsamplewidth(self.audio_handler.get_sample_size(self.AUDIO_FORMAT))
-        self.enco_wave.setframerate(self.AUDIO_RATE)
-
-        self.streamer = multiprocessing.Process(target=self.stream)
+        self.streamer = threading.Thread(target=self.stream)
         self.streamer.daemon = True
         self.streamer.start()
 
-        self.recorder = multiprocessing.Process(target=self.record)
+        self.recorder = threading.Thread(target=self.record)
         self.recorder.daemon = True
         self.recorder.start()
 
@@ -218,14 +210,10 @@ class VoiceNetwork:
     def record(self):
         while True:
             if self.AUDIO_FRAMES:
-                self.enco_wave.write(b"" .join(self.AUDIO_FRAMES[0]))
+                self.SERVER.client_send_voice(self.AUDIO_FRAMES[0])
+                self.AUDIO_FRAMES.pop(0)
 
     def close(self):
-        self.streamer.terminate()
-        self.recorder.terminate()
-        self.enco_wave.close()
-        del self.AUDIO_FRAMES
-
         self.stream_handler.stop_stream()
         self.stream_handler.close()
         self.audio_handler.terminate()
