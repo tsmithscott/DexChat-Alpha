@@ -145,6 +145,11 @@ class ChatNetwork:
                     # Connect to provided paramters and add to global discovery.
                     self.client.connect((self.host, self.port))
                     self.peers[self.host] = self.client
+
+                    voice_object = VoiceNetwork(self.host, 26000)
+                    threading.Thread(target=voice_object.server_accept, daemon=True).start()
+                    threading.Thread(target=voice_object.client_send).start()
+
                 except ConnectionError as error:
                     print(error)
 
@@ -176,46 +181,89 @@ class ChatNetwork:
 
 
 class VoiceNetwork:
-    def __init__(self, server_object):
-        self.SERVER = server_object
-        self.AUDIO_CHUNK = 1024
-        self.AUDIO_FORMAT = pyaudio.paInt16
-        self.AUDIO_CHANNELS = 1
-        self.AUDIO_RATE = 44100
-        self.AUDIO_FRAMES = []
+    def __init__(self, host, port):
+        # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
+        self.my_ip = requests.get("https://ifconfig.me/ip").text
 
-        self.audio_handler = pyaudio.PyAudio()
-        self.stream_handler = None
+        # Create ALIVE flag. server_accept will wait for this flag and gracefully close.
+        self.ALIVE = True
 
-        self.streamer = threading.Thread(target=self.stream)
-        self.streamer.daemon = True
-        self.streamer.start()
+        # Create a peer discovery filter and a peer connection storage for multiple, simultaneous connections.
+        self.peers = []
+        self.peer_filter = {}
 
-        self.recorder = threading.Thread(target=self.record)
-        self.recorder.daemon = True
-        self.recorder.start()
+        # Assign socket attributes.
+        self.host = host
+        self.port = port
 
-    def stream(self):
-        self.stream_handler = self.audio_handler.open(format=self.AUDIO_FORMAT,
-                                                      channels=self.AUDIO_CHANNELS,
-                                                      rate=self.AUDIO_RATE,
-                                                      frames_per_buffer=self.AUDIO_CHUNK)
+        # Create a server socket to receive voice packets from other clients.
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server.bind(("0.0.0.0", 26000))
 
-        print("AUDIO STREAMING STARTED!")
+        # Create a client socket to send voice packets to other servers.
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+        # Create voice system.
+        self.stream_handler = pyaudio.PyAudio()
+
+        self.streamer_output = self.stream_handler.open(format=pyaudio.paInt16,
+                                                        channels=1,
+                                                        rate=44100,
+                                                        output=True)
+
+        self.streamer_input = self.stream_handler.open(format=pyaudio.paInt16,
+                                                       channels=1,
+                                                       rate=44100,
+                                                       input=True,
+                                                       frames_per_buffer=1024)
+
+        # Create voice data system.
+        self.voice_frames = []
+
+        # Activate initial connection
+        self.peers.append((self.host, 26000))
+
+    def server_receive(self):
+        """
+        Threaded instance listening for incoming messages and filtering based on packets.
+
+        :param connection:
+        :param address:
+        :return:
+        """
         while True:
-            audio_stream = self.stream_handler.read(self.AUDIO_CHUNK)
-            self.AUDIO_FRAMES.append(audio_stream)
+            try:
+                # Accept an incoming message. Buffer can be changed.
+                datagram = self.server.recvfrom(1024)
+                voice = datagram[0]
+                address = datagram[1]
 
-    def record(self):
+                if address[0] not in self.peers:
+                    self.peers.append(address[0])
+
+                if voice != '':
+                    self.streamer_output.write(voice)
+            # Broken connection.
+            except OSError as error:
+                print(error)
+
+    def client_send(self):
+        """
+        Threaded instance takes user input and filters based on packet. Send globally to peers in current discovery.
+
+        :return:
+        """
         while True:
-            if self.AUDIO_FRAMES:
-                self.SERVER.client_send_voice(self.AUDIO_FRAMES[0])
-                self.AUDIO_FRAMES.pop(0)
+            voice = self.streamer_input.read(1024)
 
-    def close(self):
-        self.stream_handler.stop_stream()
-        self.stream_handler.close()
-        self.audio_handler.terminate()
+            for peer in self.peers:
+                self.client.sendto(voice, peer)
 
-        sys.exit()
+    def dispatch_peers(self):
+        """
+        Runs when called, creates peer discovery packet and attaches header. Sends to all current peers.
+
+        :return:
+        """
+        pass
