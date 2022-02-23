@@ -239,8 +239,9 @@ class VoiceNetwork:
                 voice = datagram[0]
                 address = datagram[1]
 
-                if address[0] not in self.peers:
-                    self.peers.append(address[0])
+                if address not in self.peers:
+                    print("adding peer ", address)
+                    self.peers.append(address)
 
                 if voice != '':
                     self.streamer_output.write(voice)
@@ -258,6 +259,7 @@ class VoiceNetwork:
             voice = self.streamer_input.read(1024)
 
             for peer in self.peers:
+                print("sending to ", peer)
                 self.client.sendto(voice, peer)
 
     def dispatch_peers(self):
