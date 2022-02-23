@@ -243,6 +243,7 @@ class VoiceNetwork:
                     self.peers[address[0]] = 25000
 
                 if voice != '':
+                    print("recv from ", address)
                     self.voice_frames.append(voice)
             # Broken connection.
             except OSError as error:
@@ -258,7 +259,7 @@ class VoiceNetwork:
             voice = self.streamer_input.read(1024)
 
             for peer in self.peers:
-                print("sending to ", peer)
+                print("sending to ", peer, self.peers[peer])
                 self.client.sendto(voice, (peer, self.peers[peer]))
 
     def play_voice(self):
