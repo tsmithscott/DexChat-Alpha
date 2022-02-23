@@ -1,11 +1,16 @@
 import socket
 import sys
 import threading
+import multiprocessing
 import json
 import requests
+import uuid
+
+import pyaudio
+import wave
 
 
-class Network:
+class ChatNetwork:
     def __init__(self, host: str, port: int):
         """
         Initiates a server and client socket. Clients will connect to servers
@@ -171,3 +176,58 @@ class Network:
         """
         for address in self.peers:
             self.peers.get(address).send(("peer_filter+" + json.dumps(self.peer_filter)).encode())
+
+
+class VoiceNetwork:
+    def __init__(self):
+        self.AUDIO_CHUNK = 1024
+        self.AUDIO_FORMAT = pyaudio.paInt16
+        self.AUDIO_CHANNELS = 2
+        self.AUDIO_RATE = 44100
+        self.AUDIO_FRAMES = []
+        self.TEMP_OUT = f"crypt/temp/{uuid.uuid4().hex}.enco"
+
+        self.audio_handler = pyaudio.PyAudio()
+        self.stream_handler = None
+
+        self.enco_wave = wave.open(self.TEMP_OUT, "wb")
+        self.enco_wave.setnchannels(self.AUDIO_CHANNELS)
+        self.enco_wave.setsamplewidth(self.audio_handler.get_sample_size(self.AUDIO_FORMAT))
+        self.enco_wave.setframerate(self.AUDIO_RATE)
+
+        self.streamer = multiprocessing.Process(target=self.stream)
+        self.streamer.daemon = True
+        self.streamer.start()
+
+        self.recorder = multiprocessing.Process(target=self.record)
+        self.recorder.daemon = True
+        self.recorder.start()
+
+    def stream(self):
+        self.stream_handler = self.audio_handler.open(format=self.AUDIO_FORMAT,
+                                                      channels=self.AUDIO_CHANNELS,
+                                                      rate=self.AUDIO_RATE,
+                                                      frames_per_buffer=self.AUDIO_CHUNK)
+
+        print("AUDIO STREAMING STARTED!")
+
+        while True:
+            audio_stream = self.stream_handler.read(self.AUDIO_CHUNK)
+            self.AUDIO_FRAMES.append(audio_stream)
+
+    def record(self):
+        while True:
+            if self.AUDIO_FRAMES:
+                self.enco_wave.write(b"" .join(self.AUDIO_FRAMES[0]))
+
+    def close(self):
+        self.streamer.terminate()
+        self.recorder.terminate()
+        self.enco_wave.close()
+        del self.AUDIO_FRAMES
+
+        self.stream_handler.stop_stream()
+        self.stream_handler.close()
+        self.audio_handler.terminate()
+
+        sys.exit()
