@@ -222,7 +222,7 @@ class VoiceNetwork:
         self.voice_frames = []
 
         # Activate initial connection
-        self.peers.append((self.host, 26000))
+        self.peers.append((self.host, 25000))
 
     def server_receive(self):
         """
