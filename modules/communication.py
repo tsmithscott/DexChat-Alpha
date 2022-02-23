@@ -183,7 +183,7 @@ class ChatNetwork:
 class VoiceNetwork:
     def __init__(self, host=None, port=None):
         # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
-        self.my_ip = requests.get("https://ifconfig.me/ip").text
+        # self.my_ip = requests.get("https://ifconfig.me/ip").text
 
         # Create ALIVE flag. server_accept will wait for this flag and gracefully close.
         self.ALIVE = True
