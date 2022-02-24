@@ -255,7 +255,7 @@ class VoiceNetwork:
         :return:
         """
         while True:
-            voice = self.streamer_input.read(4096)
+            voice = self.streamer_input.read(16384)
 
             for peer in self.peers:
                 self.client.sendto(voice, (peer, self.peers.get(peer)))
