@@ -216,7 +216,7 @@ class VoiceNetwork:
                                                        channels=1,
                                                        rate=44100,
                                                        input=True,
-                                                       frames_per_buffer=1024)
+                                                       frames_per_buffer=8192)
 
         # Create voice data system.
         self.voice_frames = []
@@ -235,7 +235,7 @@ class VoiceNetwork:
         while True:
             try:
                 # Accept an incoming message. Buffer can be changed.
-                datagram = self.server.recvfrom(4096)
+                datagram = self.server.recvfrom(16384)
                 voice = datagram[0]
                 address = datagram[1]
 
@@ -243,7 +243,6 @@ class VoiceNetwork:
                     self.peers[address[0]] = address[1]
 
                 if voice != '':
-                    print("recv from ", address)
                     self.voice_frames.append(voice)
             # Broken connection.
             except OSError as error:
@@ -256,10 +255,9 @@ class VoiceNetwork:
         :return:
         """
         while True:
-            voice = self.streamer_input.read(1024)
+            voice = self.streamer_input.read(4096)
 
             for peer in self.peers:
-                print("sending to ", peer, self.peers.get(peer))
                 self.client.sendto(voice, (peer, self.peers.get(peer)))
 
     def play_voice(self):
