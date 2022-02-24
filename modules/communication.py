@@ -216,7 +216,7 @@ class VoiceNetwork:
                                                        channels=1,
                                                        rate=44100,
                                                        input=True,
-                                                       frames_per_buffer=8192)
+                                                       frames_per_buffer=4096)
 
         # Create voice data system.
         self.voice_frames = []
@@ -235,7 +235,7 @@ class VoiceNetwork:
         while True:
             try:
                 # Accept an incoming message. Buffer can be changed.
-                datagram = self.server.recvfrom(16384)
+                datagram = self.server.recvfrom(8192)
                 voice = datagram[0]
                 address = datagram[1]
 
@@ -255,7 +255,7 @@ class VoiceNetwork:
         :return:
         """
         while True:
-            voice = self.streamer_input.read(16384)
+            voice = self.streamer_input.read(8192)
 
             for peer in self.peers:
                 self.client.sendto(voice, (peer, self.peers.get(peer)))
