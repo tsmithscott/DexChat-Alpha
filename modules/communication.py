@@ -235,12 +235,12 @@ class VoiceNetwork:
         while True:
             try:
                 # Accept an incoming message. Buffer can be changed.
-                datagram = self.server.recvfrom(1024)
+                datagram = self.server.recvfrom(4096)
                 voice = datagram[0]
                 address = datagram[1]
 
                 if address[0] not in self.peers:
-                    self.peers[address[0]] = 25000
+                    self.peers[address[0]] = address[1]
 
                 if voice != '':
                     print("recv from ", address)
@@ -259,8 +259,8 @@ class VoiceNetwork:
             voice = self.streamer_input.read(1024)
 
             for peer in self.peers:
-                print("sending to ", peer, self.peers[peer])
-                self.client.sendto(voice, (peer, self.peers[peer]))
+                print("sending to ", peer, self.peers.get(peer))
+                self.client.sendto(voice, (peer, self.peers.get(peer)))
 
     def play_voice(self):
         while True:
