@@ -10,7 +10,7 @@ class GUI:
 
         # ROOT WINDOW
         self.root = Tk()
-        self.root.title("EncoChat V1")
+        self.root.title("DexChat")
         self.root.geometry("550x650")
         self.root.resizable(False, False)
 
