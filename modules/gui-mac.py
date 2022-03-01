@@ -1,12 +1,16 @@
 from tkinter import Tk, Listbox, END
 from tkinter import ttk
 import requests
+import threading
+
+from modules.communication2 import ChatNetwork
 
 
 class GUI:
     def __init__(self):
         # GLOBAL FLAGS
-        self.VOICE_ENABLED = False
+        self.chat = None
+        self.voice = None
 
         # ROOT WINDOW
         self.root = Tk()
@@ -59,6 +63,7 @@ class GUI:
 
     def send_message(self, event=None):
         message = self.message_entry.get()
+        self.chat.client_send(message)
         self.chat_box.insert(END, f"Me: {message}")
         self.message_entry.delete(0, END)
 
@@ -91,6 +96,9 @@ class GUI:
 
         self.voice_button.configure(text="Enable Voice", command=self.enable_voice)
 
+    def set_chat(self, chat):
+        self.chat = chat
+
     def run(self):
         my_ip = requests.get("https://ifconfig.me/ip").text
         self.status_box.insert(END, f"System (INFO): Running on {my_ip}")
@@ -115,4 +123,12 @@ class GUI:
 
 if __name__ == '__main__':
     app = GUI()
+
+    chat = ChatNetwork("100.67.164.33", 25000, app)
+
+    threading.Thread(target=chat.server_accept, daemon=True).start()
+
+    app.set_chat(chat)
+    chat.client_send("/connect")
+
     app.run()
