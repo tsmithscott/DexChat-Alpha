@@ -1,3 +1,5 @@
+from sys import platform
+
 from tkinter import Tk, Listbox, END
 from tkinter import ttk
 import requests
@@ -30,8 +32,12 @@ class GUI:
         # CHAT FRAME
         self.chat_frame = ttk.Frame(self.root_frame, width=550, height=363)
         self.chat_labelframe = ttk.LabelFrame(self.chat_frame, text="Chat", labelanchor="n", width=500, height=353)
-        self.status_box = Listbox(self.chat_frame, width=79, height=4, bd=0)
-        self.chat_box = Listbox(self.chat_frame, width=79, height=12, bd=0)
+        if platform == "win32":
+            self.status_box = Listbox(self.chat_frame, width=79, height=4, bd=0)
+            self.chat_box = Listbox(self.chat_frame, width=79, height=12, bd=0)
+        elif platform == "darwin":
+            self.status_box = Listbox(self.chat_frame, width=53, height=4, bd=0)
+            self.chat_box = Listbox(self.chat_frame, width=53, height=11, bd=0)
         self.message_entry = ttk.Entry(self.chat_frame, width=10)
         self.message_entry.bind("<Return>", self.send_message)
 
@@ -96,9 +102,14 @@ class GUI:
         self.status_box.insert(END, f"System (INFO): Running on {my_ip}")
         self.status_box.insert(END, "System (INFO): Encryption Enabled.")
         self.status_box.insert(END, "System (INFO): Voice Disabled.")
-        self.status_box.insert(END,
-                               "-------------------------------------------------------------------------------------"
-                               "----------")
+        if platform == "win32":
+            self.status_box.insert(END,
+                                   "-----------------------------------------------------------------------------------"
+                                   "------------")
+        elif platform == "darwin":
+            self.status_box.insert(END,
+                                   "-----------------------------------------------------------------------------------"
+                                   "--")
 
         self.status_box.itemconfig(0, {"fg": "green"})
         self.status_box.itemconfig(1, {"fg": "green"})

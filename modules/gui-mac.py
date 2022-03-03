@@ -3,7 +3,7 @@ from tkinter import ttk
 import requests
 import threading
 
-from modules.communication2 import ChatNetwork
+from modules.communication import ChatNetwork
 
 
 class GUI:
@@ -124,11 +124,10 @@ class GUI:
 if __name__ == '__main__':
     app = GUI()
 
-    chat = ChatNetwork("100.67.164.33", 25000, app)
+    chat = ChatNetwork("100.67.164.33", 25000)
 
     threading.Thread(target=chat.server_accept, daemon=True).start()
 
     app.set_chat(chat)
-    chat.client_send("/connect")
 
     app.run()
