@@ -11,7 +11,7 @@ class Keychain:
     @staticmethod
     def store_keys(pub_key: str, priv_key: str) -> bool:
         try:
-            keyring.set_password("sfe-cw1", pub_key, priv_key)
+            keyring.set_password("dex-chat", pub_key, priv_key)
 
             with open("crypt/pub.enc", "w") as enc_file:
                 enc_file.write(pub_key)
@@ -31,14 +31,14 @@ class Keychain:
     @staticmethod
     def fetch_priv(pub_key: str):
         try:
-            return keyring.get_password("sfe-cw1", pub_key)
+            return keyring.get_password("dex-chat", pub_key)
         except RuntimeError as error:
             print(error)
 
     @staticmethod
     def add_auth(username: str, password_hash: str) -> bool:
         try:
-            keyring.set_password("sfe-cw1", username, password_hash)
+            keyring.set_password("dex-chat", username, password_hash)
             return True
         except RuntimeError as error:
             print(error)
@@ -46,6 +46,6 @@ class Keychain:
     @staticmethod
     def fetch_auth(username: str) -> str:
         try:
-            return keyring.get_password("sfe-cw1", username)
+            return keyring.get_password("dex-chat", username)
         except RuntimeError as error:
             print(error)
