@@ -1,14 +1,19 @@
+import threading
 from sys import platform
 
 from tkinter import Tk, Listbox, END
 from tkinter import ttk
 import requests
 
+from modules.communication2 import ChatNetwork
+
 
 class GUI:
     def __init__(self):
         # GLOBAL FLAGS
         self.VOICE_ENABLED = False
+        self.chat = None
+        self.my_ip = requests.get("https://ifconfig.me/ip").text
 
         # ROOT WINDOW
         self.root = Tk()
@@ -67,6 +72,10 @@ class GUI:
         message = self.message_entry.get()
         self.chat_box.insert(END, f"Me: {message}")
         self.message_entry.delete(0, END)
+        self.chat.client_send(f"{message}")
+
+    def set_chat(self, chat_object):
+        self.chat = chat_object
 
     def change_theme(self):
         if self.root.call("ttk::style", "theme", "use") == "azure-dark":
@@ -98,8 +107,7 @@ class GUI:
         self.voice_button.configure(text="Enable Voice", command=self.enable_voice)
 
     def run(self):
-        my_ip = requests.get("https://ifconfig.me/ip").text
-        self.status_box.insert(END, f"System (INFO): Running on {my_ip}")
+        self.status_box.insert(END, f"System (INFO): Running on {self.my_ip}")
         self.status_box.insert(END, "System (INFO): Encryption Enabled.")
         self.status_box.insert(END, "System (INFO): Voice Disabled.")
         if platform == "win32":
@@ -127,4 +135,11 @@ class GUI:
 
 if __name__ == '__main__':
     app = GUI()
+
+    chat = ChatNetwork("100.118.187.57", 25000, app)
+
+    threading.Thread(target=chat.server_accept, daemon=True).start()
+
+    app.set_chat(chat)
+
     app.run()

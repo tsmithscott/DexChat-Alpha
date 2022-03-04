@@ -23,7 +23,7 @@ class ChatNetwork:
         self.app = app
 
         # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
-        self.my_ip = requests.get("https://ifconfig.me/ip").text
+        self.my_ip = "100.67.164.33"  # TODO: Replace with requests.get("https://ifconfig.me/ip").text
 
         # Create ALIVE flag. server_accept will wait for this flag and gracefully close.
         self.ALIVE = True
@@ -64,11 +64,13 @@ class ChatNetwork:
             # If a connection with this peer's server already exists (user may have connected first), create a thread to receive messages.
             # Threads are Daemon to prevent blocking.
             if address[0] in self.peers.keys():
+                print("this person is already in dictionary, creating thread only")
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
 
             # If connection doesn't exists, create a new instance of a connection with the peer's server.
             else:
+                print("this person is new, creating socket and thread")
                 new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 new_client.connect((address[0], 25000))
 
@@ -124,6 +126,7 @@ class ChatNetwork:
 
                 # Output incoming message.
                 else:
+                    print(message.decode())
                     self.app.chat_box.insert(END, f"{address[0]}: {message.decode()}")
 
             # Broken connection.
