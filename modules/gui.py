@@ -10,6 +10,8 @@ from modules.communication2 import ChatNetwork
 
 class GUI:
     def __init__(self):
+        # CREATE EXECUTABLE
+
         # ROOT WINDOW
         self.root = Tk()
         self.root.title("DexChat")
@@ -29,16 +31,15 @@ class GUI:
         self.voice = None
         self.my_ip = requests.get("https://ifconfig.me/ip").text
         self.style = ttk.Style()
+        self.RESTART = False
 
         # START FRAME FOR HOST/CONNECT OPTIONS
         self.start_frame = ttk.Frame(self.root, width=275, height=115)
         self.start_frame.place(x=0, y=0)
 
         # START FRAME CONFIG
-        self.connect_button = ttk.Button(self.start_frame, text="Connect to DexChat",
-                                         command=lambda: self.display_menu(connect=True), style="Accent.TButton")
-        self.host_button = ttk.Button(self.start_frame, text="Host DexChat",
-                                      command=lambda: self.display_menu(host=True))
+        self.connect_button = ttk.Button(self.start_frame, text="Connect to DexChat", command=lambda: self.display_menu(connect=True), style="Accent.TButton")
+        self.host_button = ttk.Button(self.start_frame, text="Host DexChat", command=lambda: self.display_menu(host=True))
 
         self.connect_button.place(x=137, y=20, anchor="n")
         self.host_button.place(x=137, y=65, anchor="n")
@@ -52,8 +53,7 @@ class GUI:
         self.port_entry = ttk.Entry(self.config_frame, width=10, justify="center")
         self.nickname_entry = ttk.Entry(self.config_frame, width=10, justify="center")
         self.voice_check = ttk.Checkbutton(self.config_frame, text="Enable DexVoice", variable=self.VOICE_ENABLED)
-        self.start_button = ttk.Button(self.menu_frame, text="Connect", width=10, command=self.connect_dex,
-                                       style="Accent.TButton")
+        self.start_button = ttk.Button(self.menu_frame, text="Connect", width=10, command=self.connect_dex, style="Accent.TButton")
 
         self.add_placeholder(self.ip_entry, "IP Address")
         self.add_placeholder(self.port_entry, "(default port 25000)")
@@ -83,7 +83,7 @@ class GUI:
         self.button_frame = ttk.Frame(self.root_frame, width=550, height=80)
         self.voice_button = ttk.Button(self.button_frame, text="Enable Voice", width=10, command=self.enable_voice)
         self.theme_button = ttk.Button(self.button_frame, text="Light Mode", width=10, command=self.change_theme)
-        self.disconnect_button = ttk.Button(self.button_frame, text="Disconnect", width=10, style="Accent.TButton")
+        self.disconnect_button = ttk.Button(self.button_frame, text="Disconnect", width=10, style="Accent.TButton", command=self.disconnect)
 
         self.button_frame.place(x=0, y=0, anchor="nw")
         self.voice_button.place(x=525, y=22, anchor="ne", width=150, height=40)
@@ -189,6 +189,7 @@ class GUI:
             self.root.geometry("250x325")
             self.menu_frame.place(x=0, y=0)
         if host:
+            self.start_frame.destroy()
             self.host_dex()
 
     def host_dex(self):
@@ -214,7 +215,11 @@ class GUI:
                 self.start_dex(connect=True)
 
     def start_dex(self, connect=False, host=False):
-        self.menu_frame.destroy()
+        if connect:
+            self.menu_frame.destroy()
+        else:
+            self.start_frame.destroy()
+
         self.root.geometry("550x650")
         self.root_frame.place(x=0, y=0)
 
@@ -239,6 +244,13 @@ class GUI:
         self.connected_chat.itemconfig(0, {"fg": "green"})
 
         self.root.mainloop()
+
+    def disconnect(self):
+        for child in self.root.winfo_children():
+            child.destroy()
+
+        print(self.root.children)
+        self.start_frame.place(x=0, y=0)
 
     def run(self):
         self.root.mainloop()
