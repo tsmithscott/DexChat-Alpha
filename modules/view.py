@@ -1,6 +1,6 @@
 from sys import platform
 
-from tkinter import Tk, BooleanVar, END, messagebox, Listbox
+from tkinter import Tk, BooleanVar, END, messagebox, Listbox, Label
 from tkinter import ttk
 
 
@@ -162,6 +162,10 @@ class DexFrame(ttk.Frame):
 
         self.connected_chat.itemconfig(0, {"fg": "green"})
 
+        label = Label(self, text="Simplicity, carried to the extreme, becomes elegance.",
+                      font=("Courier", 11, "italic"), justify="center")
+        label.place(x=275, y=655, anchor="center")
+
     def change_theme(self):
         if self.parent.call("ttk::style", "theme", "use") == "azure-dark":
             self.parent.call("set_theme", "light")
@@ -221,9 +225,9 @@ class App:
 
     def start_dex_client(self):
         self.menu_frame.destroy()
-        self.resize_root(550, 650)
+        self.resize_root(550, 685)
 
-        self.dex_frame = DexFrame(self, self.root, width=550, height=650)
+        self.dex_frame = DexFrame(self, self.root, width=550, height=685)
         self.dex_frame.place(x=0, y=0)
 
     def resize_root(self, width, height):
