@@ -11,8 +11,8 @@ class StartFrame(ttk.Frame):
         self.controller = controller
 
         connect_button = ttk.Button(self, text="Connect to DexChat", style="Accent.TButton",
-                                    command=self.controller.connect_to_dex)
-        host_button = ttk.Button(self, text="Host DexChat")
+                                    command=self.controller.configure_dex)
+        host_button = ttk.Button(self, text="Host DexChat", command=self.controller.host_dex)
 
         connect_button.place(x=137, y=20, anchor="n")
         host_button.place(x=137, y=65, anchor="n")
@@ -30,6 +30,7 @@ class MenuFrame(ttk.Frame):
         self.nickname_entry = ttk.Entry(self, width=10, justify="center")
         self.voice_check = ttk.Checkbutton(self, text="Enable DexVoice", variable=self.controller.VOICE_ENABLED)
         self.start_button = ttk.Button(self, text="Connect", style="Accent.TButton", command=self.configure_dex_chat)
+        self.cancel_button = ttk.Button(self, text="Cancel", command=self.controller.cancel)
 
         # Place widgets on frame
         self.ip_entry.place(x=25, y=30, anchor="nw", width=200, height=40)
@@ -37,6 +38,7 @@ class MenuFrame(ttk.Frame):
         self.nickname_entry.place(x=25, y=130, anchor="nw", width=200, height=40)
         self.voice_check.place(x=65, y=185, anchor="nw")
         self.start_button.place(x=125, y=230, anchor="n")
+        self.cancel_button.place(x=125, y=275, anchor="n")
 
         self.add_placeholder(self.ip_entry, "IP Address")
         self.add_placeholder(self.port_entry, "(default port 25000)")
@@ -95,7 +97,7 @@ class DexFrame(ttk.Frame):
         self.voice_button = ttk.Button(button_frame, text="Enable Voice", width=10, command=self.enable_voice)
         self.theme_button = ttk.Button(button_frame, text="Light Mode", width=10, command=self.change_theme)
         disconnect_button = ttk.Button(button_frame, text="Disconnect", width=10, style="Accent.TButton",
-                                       command=self.controller.reset)
+                                       command=self.controller.disconnect)
 
         button_frame.place(x=0, y=0, anchor="nw")
         self.voice_button.place(x=525, y=22, anchor="ne", width=150, height=40)
@@ -162,9 +164,9 @@ class DexFrame(ttk.Frame):
 
         self.connected_chat.itemconfig(0, {"fg": "green"})
 
-        label = Label(self, text="Simplicity, carried to the extreme, becomes elegance.",
-                      font=("Courier", 11, "italic"), justify="center")
-        label.place(x=275, y=655, anchor="center")
+        quote_label = Label(self, text="Simplicity, carried to the extreme, becomes elegance.",
+                            font=("Courier", 11, "italic"), justify="center")
+        quote_label.place(x=275, y=655, anchor="center")
 
     def change_theme(self):
         if self.parent.call("ttk::style", "theme", "use") == "azure-dark":
@@ -216,12 +218,19 @@ class App:
 
         self.start_frame.place(x=0, y=0)
 
-    def connect_to_dex(self):
+    def configure_dex(self):
         self.start_frame.destroy()
-        self.resize_root(250, 305)
+        self.resize_root(250, 325)
 
-        self.menu_frame = MenuFrame(self, self.root, width=250, height=305)
+        self.menu_frame = MenuFrame(self, self.root, width=250, height=325)
         self.menu_frame.place(x=0, y=0)
+
+    def host_dex(self):
+        self.start_frame.destroy()
+        self.resize_root(550, 685)
+
+        self.dex_frame = DexFrame(self, self.root, width=550, height=685)
+        self.dex_frame.place(x=0, y=0)
 
     def start_dex_client(self):
         self.menu_frame.destroy()
@@ -233,9 +242,15 @@ class App:
     def resize_root(self, width, height):
         self.root.geometry(f"{width}x{height}")
 
-    def reset(self):
-        self.root.geometry("275x115")
+    def disconnect(self):
+        self.resize_root(275, 115)
         self.dex_frame.destroy()
+        self.start_frame = StartFrame(self, self.root, width=275, height=115)
+        self.start_frame.place(x=0, y=0)
+
+    def cancel(self):
+        self.resize_root(275, 115)
+        self.menu_frame.destroy()
         self.start_frame = StartFrame(self, self.root, width=275, height=115)
         self.start_frame.place(x=0, y=0)
 
