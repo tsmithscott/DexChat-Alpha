@@ -2,7 +2,7 @@ import socket
 import sys
 import threading
 import json
-import requests
+import datetime
 
 from tkinter import END
 
@@ -10,7 +10,7 @@ import pyaudio
 
 
 class ChatNetwork:
-    def __init__(self, host: str, port: int, app):
+    def __init__(self, app):
         """
         Initiates a server and client socket. Clients will connect to servers
         and servers will connect to clients.
@@ -23,7 +23,7 @@ class ChatNetwork:
         self.app = app
 
         # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
-        self.my_ip = "100.67.164.33"  # TODO: Replace with requests.get("https://ifconfig.me/ip").text
+        self.my_ip = '100.67.164.33'  # TODO: REMOVE THIS AND CHANGE BACK TO IFCONFIG.ME IP
 
         # Create ALIVE flag. server_accept will wait for this flag and gracefully close.
         self.ALIVE = True
@@ -33,8 +33,8 @@ class ChatNetwork:
         self.peer_filter = {}
 
         # Assign socket attributes.
-        self.host = host
-        self.port = port
+        # self.host = host
+        # self.port = port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind(("0.0.0.0", 25000))
@@ -64,19 +64,19 @@ class ChatNetwork:
             # If a connection with this peer's server already exists (user may have connected first), create a thread to receive messages.
             # Threads are Daemon to prevent blocking.
             if address[0] in self.peers.keys():
-                print("this person is already in dictionary, creating thread only")
+                self.app.dex_frame.connected_chat.insert(END, f"{address[0]}")
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
 
             # If connection doesn't exists, create a new instance of a connection with the peer's server.
             else:
-                print("this person is new, creating socket and thread")
                 new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 new_client.connect((address[0], 25000))
 
                 # Add the new connection to a global peer discovery.
                 self.peers[address[0]] = new_client
                 self.peer_filter[address[0]] = 25000
+                self.app.dex_frame.connected_chat.insert(END, f"{address[0]}")
 
                 # Broadcast a peer discovery.
                 self.dispatch_peers()
@@ -108,6 +108,8 @@ class ChatNetwork:
 
                     # Remove peer from current connections.
                     del self.peers[remote_ip]
+                    connected_ip = self.app.dex_frame.connected_chat.get(0, END).index(remote_ip)
+                    self.app.dex_frame.connected_chat.delete(connected_ip)
                     connection.close()
                     sys.exit()
 
@@ -126,8 +128,7 @@ class ChatNetwork:
 
                 # Output incoming message.
                 else:
-                    print(message.decode())
-                    self.app.chat_box.insert(END, f"{address[0]}: {message.decode()}")
+                    self.app.dex_frame.chat_box.insert(END, f"{message.decode()}")
 
             # Broken connection.
             except OSError:
@@ -141,22 +142,9 @@ class ChatNetwork:
 
         :return:
         """
-        # Filter message. If connection attempt, connected self.client to the provided parameters when initialised.
-        if message == "/connect":
-            try:
-                # Connect to provided paramters and add to global discovery.
-                self.client.connect((self.host, self.port))
-                self.peers[self.host] = self.client
-
-                voice_object = VoiceNetwork(self.host, 26000)
-                threading.Thread(target=voice_object.server_receive, daemon=True).start()
-                threading.Thread(target=voice_object.client_send).start()
-
-            except ConnectionError as error:
-                print(error)
 
         # If disconnect request, attach public IP to packet and broadcast to current peer discovery.
-        elif message == "/disconnect":
+        if message == "/disconnect":
             try:
                 for address in self.peers:
                     self.peers.get(address).send((message + "+" + self.my_ip).encode())
@@ -170,7 +158,8 @@ class ChatNetwork:
         # Broadcast message to current peer discovery.
         else:
             for address in self.peers:
-                self.peers.get(address).send(message.encode())
+                self.app.dex_frame.chat_box.insert(END, f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
+                self.peers.get(address).send(f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}".encode())
 
     def dispatch_peers(self):
         """
@@ -180,6 +169,19 @@ class ChatNetwork:
         """
         for address in self.peers:
             self.peers.get(address).send(("peer_filter+" + json.dumps(self.peer_filter)).encode())
+
+    def connect(self, host, port):
+        try:
+            # Connect to provided parameters and add to global discovery.
+            self.client.connect((host, port))
+            self.peers[host] = self.client
+
+            # voice_object = VoiceNetwork(host, 26000)
+            # threading.Thread(target=voice_object.server_receive, daemon=True).start()
+            # threading.Thread(target=voice_object.client_send).start()
+
+        except ConnectionError as error:
+            print(error)
 
 
 class VoiceNetwork:

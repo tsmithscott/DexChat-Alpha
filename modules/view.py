@@ -1,7 +1,10 @@
 from sys import platform
+from threading import Thread
 
 from tkinter import Tk, BooleanVar, END, messagebox, Listbox, Label
 from tkinter import ttk
+
+from modules.communication2 import ChatNetwork
 
 
 class StartFrame(ttk.Frame):
@@ -81,9 +84,12 @@ class MenuFrame(ttk.Frame):
             else:
                 self.controller.PORT = int(self.port_entry.get())
 
-            if self.nickname_entry.get():
+            if self.nickname_entry.get() != "Nickname (optional)":
                 self.controller.NICK = self.nickname_entry.get()
 
+                self.controller.start_dex_client()
+            else:
+                self.controller.NICK = None
                 self.controller.start_dex_client()
 
 
@@ -129,9 +135,17 @@ class DexFrame(ttk.Frame):
 
             self.connected_chat = Listbox(chat_peer_labelframe, width=28, height=11, bd=0)
             self.connected_voice = Listbox(voice_peer_labelframe, width=28, height=11, bd=0)
+        elif platform == "linux":
+            self.status_box = Listbox(chat_frame, width=53, height=4, bd=0)
+            self.chat_box = Listbox(chat_frame, width=53, height=12, bd=0)
+
+            self.chat_box.place(x=35, y=71, anchor="nw")
+
+            self.connected_chat = Listbox(chat_peer_labelframe, width=22, height=7, bd=0)
+            self.connected_voice = Listbox(voice_peer_labelframe, width=22, height=7, bd=0)
 
         self.message_entry = ttk.Entry(chat_frame, width=10)
-        # self.message_entry.bind("<Return>", self.send_message)
+        self.message_entry.bind("<Return>", self.send_message)
 
         chat_frame.place(x=0, y=80, anchor="nw")
         chat_labelframe.place(x=25, y=0, anchor="nw")
@@ -197,6 +211,13 @@ class DexFrame(ttk.Frame):
 
         self.voice_button.configure(text="Enable Voice", command=self.enable_voice)
 
+    def send_message(self, event):
+        message = self.message_entry.get()
+
+        self.chat_box.yview(END)
+        self.message_entry.delete(0, END)
+        self.controller.CHAT.client_send(message)
+
 
 class App:
     def __init__(self):
@@ -211,6 +232,7 @@ class App:
         self.PORT = None
         self.NICK = None
         self.VOICE_ENABLED = BooleanVar(self.root)
+        self.CHAT = None
 
         self.start_frame = StartFrame(self, self.root, width=275, height=115)
         self.menu_frame = None
@@ -229,12 +251,21 @@ class App:
         self.start_frame.destroy()
         self.resize_root(550, 685)
 
+        self.CHAT = ChatNetwork(self)
+        Thread(target=self.CHAT.server_accept, daemon=True).start()
+
         self.dex_frame = DexFrame(self, self.root, width=550, height=685)
         self.dex_frame.place(x=0, y=0)
 
     def start_dex_client(self):
         self.menu_frame.destroy()
         self.resize_root(550, 685)
+
+        print(self.IP, self.PORT, self.NICK, self.VOICE_ENABLED.get())
+
+        self.CHAT = ChatNetwork(self)
+        Thread(target=self.CHAT.server_accept, daemon=True).start()
+        self.CHAT.connect(self.IP, self.PORT)
 
         self.dex_frame = DexFrame(self, self.root, width=550, height=685)
         self.dex_frame.place(x=0, y=0)
@@ -243,6 +274,7 @@ class App:
         self.root.geometry(f"{width}x{height}")
 
     def disconnect(self):
+        self.CHAT.client_send("/disconnect")
         self.resize_root(275, 115)
         self.dex_frame.destroy()
         self.start_frame = StartFrame(self, self.root, width=275, height=115)
