@@ -24,6 +24,7 @@ class ChatNetwork:
 
         # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
         self.my_ip = '100.67.164.33'  # TODO: REMOVE THIS AND CHANGE BACK TO IFCONFIG.ME IP
+        self.my_nick = None
 
         # Create ALIVE flag. server_accept will wait for this flag and gracefully close.
         self.ALIVE = True
@@ -31,6 +32,7 @@ class ChatNetwork:
         # Create a peer discovery filter and a peer connection storage for multiple, simultaneous connections.
         self.peers = {}
         self.peer_filter = {}
+        self.nicks = {}
 
         # Assign socket attributes.
         # self.host = host
@@ -64,7 +66,7 @@ class ChatNetwork:
             # If a connection with this peer's server already exists (user may have connected first), create a thread to receive messages.
             # Threads are Daemon to prevent blocking.
             if address[0] in self.peers.keys():
-                self.app.dex_frame.connected_chat.insert(END, f"{address[0]}")
+                self.client_send("/nickname")
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
 
@@ -76,17 +78,17 @@ class ChatNetwork:
                 # Add the new connection to a global peer discovery.
                 self.peers[address[0]] = new_client
                 self.peer_filter[address[0]] = 25000
-                self.app.dex_frame.connected_chat.insert(END, f"{address[0]}")
 
                 # Broadcast a peer discovery.
                 self.dispatch_peers()
+                self.client_send("/nickname")
 
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
 
     def server_receive(self, connection: socket.socket, address: tuple):
         """
-        Threaded instance listening for imcoming messages and filtering based on packets.
+        Threaded instance listening for incoming messages and filtering based on packets.
 
         :param connection:
         :param address:
@@ -108,7 +110,8 @@ class ChatNetwork:
 
                     # Remove peer from current connections.
                     del self.peers[remote_ip]
-                    connected_ip = self.app.dex_frame.connected_chat.get(0, END).index(remote_ip)
+                    connected_ip = self.app.dex_frame.connected_chat.get(0, END).index(f"{self.nicks[remote_ip]} ({remote_ip})")
+                    del self.nicks[remote_ip]
                     self.app.dex_frame.connected_chat.delete(connected_ip)
                     connection.close()
                     sys.exit()
@@ -125,6 +128,16 @@ class ChatNetwork:
                             new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                             new_client.connect((address, peer_filter.get(address)))
                             self.peers[address] = new_client
+
+                elif "/nickname" in message.decode():
+                    nickname = message.decode().split("+")[1]
+                    ip = connection.getpeername()[0]
+                    self.nicks[ip] = nickname
+
+                    if nickname != "None":
+                        self.app.dex_frame.connected_chat.insert(END, f"{nickname} ({ip})")
+                    else:
+                        self.app.dex_frame.connected_chat.insert(END, f"{ip}")
 
                 # Output incoming message.
                 else:
@@ -155,11 +168,18 @@ class ChatNetwork:
                 sys.exit()
             except ConnectionError as error:
                 print(error)
+        elif message == "/nickname":
+            for address in self.peers:
+                self.peers.get(address).send(f"/nickname+{self.my_nick}".encode())
         # Broadcast message to current peer discovery.
         else:
             for address in self.peers:
                 self.app.dex_frame.chat_box.insert(END, f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
-                self.peers.get(address).send(f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}".encode())
+
+                if self.my_nick is None:
+                    self.peers.get(address).send(f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}".encode())
+                else:
+                    self.peers.get(address).send(f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_nick}]: {message}".encode())
 
     def dispatch_peers(self):
         """
@@ -182,6 +202,9 @@ class ChatNetwork:
 
         except ConnectionError as error:
             print(error)
+
+    def set_nick(self, nickname):
+        self.my_nick = nickname
 
 
 class VoiceNetwork:
