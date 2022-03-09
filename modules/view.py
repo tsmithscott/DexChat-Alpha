@@ -14,8 +14,8 @@ class StartFrame(ttk.Frame):
         self.controller = controller
 
         connect_button = ttk.Button(self, text="Connect to DexChat", style="Accent.TButton",
-                                    command=self.controller.configure_dex)
-        host_button = ttk.Button(self, text="Host DexChat", command=self.controller.host_dex)
+                                    command=self.controller.open_connect_frame)
+        host_button = ttk.Button(self, text="Host DexChat", command=self.controller.open_host_frame)
 
         connect_button.place(x=137, y=20, anchor="n")
         host_button.place(x=137, y=65, anchor="n")
@@ -91,6 +91,39 @@ class MenuFrame(ttk.Frame):
             else:
                 self.controller.NICK = None
                 self.controller.start_dex_client()
+
+
+class HostFrame(ttk.Frame):
+    def __init__(self, controller, parent, **kwargs):
+        ttk.Frame.__init__(self, parent, **kwargs)
+        self.parent = parent
+        self.controller = controller
+
+        self.nickname_entry = ttk.Entry(self, width=10, justify="center")
+        self.start_button = ttk.Button(self, text="Start", style="Accent.TButton")
+        self.cancel_button = ttk.Button(self, text="Cancel", command=self.controller.cancel_host)
+
+        self.nickname_entry.place(x=25, y=30, anchor="nw", width=200, height=40)
+        self.start_button.place(x=125, y=90, anchor="n")
+        self.cancel_button.place(x=125, y=135, anchor="n")
+
+        self.add_placeholder(self.nickname_entry, "Nickname (optional)")
+        self.nickname_entry.bind("<FocusIn>", lambda event: self.focus_in(event, self.nickname_entry))
+        self.nickname_entry.bind("<FocusOut>",
+                                 lambda event: self.focus_out(event, self.nickname_entry, "Nickname (optional)"))
+
+    @staticmethod
+    def add_placeholder(widget, placeholder: str):
+        widget.insert(0, placeholder)
+
+    @staticmethod
+    def focus_in(event, widget):
+        if widget.get() == "IP Address" or widget.get() == "(default port 25000)" or widget.get() == "Nickname (optional)":
+            widget.delete(0, END)
+
+    def focus_out(self, event, widget, placeholder: str):
+        if not widget.get():
+            self.add_placeholder(widget, placeholder)
 
 
 class DexFrame(ttk.Frame):
@@ -235,33 +268,36 @@ class App:
         self.CHAT = None
 
         self.start_frame = StartFrame(self, self.root, width=275, height=115)
-        self.menu_frame = None
+        self.connect_frame = None
+        self.host_frame = None
         self.dex_frame = None
 
         self.start_frame.place(x=0, y=0)
 
-    def configure_dex(self):
+    def open_connect_frame(self):
         self.start_frame.destroy()
         self.resize_root(250, 325)
 
-        self.menu_frame = MenuFrame(self, self.root, width=250, height=325)
-        self.menu_frame.place(x=0, y=0)
+        self.connect_frame = MenuFrame(self, self.root, width=250, height=325)
+        self.connect_frame.place(x=0, y=0)
 
-    def host_dex(self):
+    def open_host_frame(self):
+        self.start_frame.destroy()
+        self.resize_root(250, 190)
+
+        self.host_frame = HostFrame(self, self.root, width=250, height=190)
+        self.host_frame.place(x=0, y=0)
+
+    def start_dex_host(self):
         self.start_frame.destroy()
         self.resize_root(550, 685)
 
         self.CHAT = ChatNetwork(self)
         Thread(target=self.CHAT.server_accept, daemon=True).start()
 
-        self.dex_frame = DexFrame(self, self.root, width=550, height=685)
-        self.dex_frame.place(x=0, y=0)
-
     def start_dex_client(self):
-        self.menu_frame.destroy()
+        self.connect_frame.destroy()
         self.resize_root(550, 685)
-
-        print(self.IP, self.PORT, self.NICK, self.VOICE_ENABLED.get())
 
         self.CHAT = ChatNetwork(self)
         Thread(target=self.CHAT.server_accept, daemon=True).start()
@@ -282,7 +318,13 @@ class App:
 
     def cancel(self):
         self.resize_root(275, 115)
-        self.menu_frame.destroy()
+        self.connect_frame.destroy()
+        self.start_frame = StartFrame(self, self.root, width=275, height=115)
+        self.start_frame.place(x=0, y=0)
+
+    def cancel_host(self):
+        self.resize_root(275, 115)
+        self.host_frame.destroy()
         self.start_frame = StartFrame(self, self.root, width=275, height=115)
         self.start_frame.place(x=0, y=0)
 
