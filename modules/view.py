@@ -21,7 +21,7 @@ class StartFrame(ttk.Frame):
         host_button.place(x=137, y=65, anchor="n")
 
 
-class MenuFrame(ttk.Frame):
+class ConnectFrame(ttk.Frame):
     def __init__(self, controller, parent, **kwargs):
         ttk.Frame.__init__(self, parent, **kwargs)
         self.parent = parent
@@ -100,7 +100,7 @@ class HostFrame(ttk.Frame):
         self.controller = controller
 
         self.nickname_entry = ttk.Entry(self, width=10, justify="center")
-        self.start_button = ttk.Button(self, text="Start", style="Accent.TButton")
+        self.start_button = ttk.Button(self, text="Start", style="Accent.TButton", command=self.controller.start_dex_host)
         self.cancel_button = ttk.Button(self, text="Cancel", command=self.controller.cancel_host)
 
         self.nickname_entry.place(x=25, y=30, anchor="nw", width=200, height=40)
@@ -278,7 +278,7 @@ class App:
         self.start_frame.destroy()
         self.resize_root(250, 325)
 
-        self.connect_frame = MenuFrame(self, self.root, width=250, height=325)
+        self.connect_frame = ConnectFrame(self, self.root, width=250, height=325)
         self.connect_frame.place(x=0, y=0)
 
     def open_host_frame(self):
@@ -289,11 +289,14 @@ class App:
         self.host_frame.place(x=0, y=0)
 
     def start_dex_host(self):
-        self.start_frame.destroy()
+        self.host_frame.destroy()
         self.resize_root(550, 685)
 
         self.CHAT = ChatNetwork(self)
         Thread(target=self.CHAT.server_accept, daemon=True).start()
+
+        self.dex_frame = DexFrame(self, self.root, width=550, height=685)
+        self.dex_frame.place(x=0, y=0)
 
     def start_dex_client(self):
         self.connect_frame.destroy()
