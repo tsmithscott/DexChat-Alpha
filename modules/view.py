@@ -150,7 +150,6 @@ class DexFrame(ttk.Frame):
         self.theme_button.place(x=25, y=22, anchor="nw", width=150, height=40)
         disconnect_button.place(x=275, y=22, anchor="n", width=120, height=40)
 
-        # Create chat frame and
         chat_frame = ttk.Frame(self, width=550, height=363)
         chat_labelframe = ttk.LabelFrame(chat_frame, text="Chat", labelanchor="n", width=500, height=353)
 
