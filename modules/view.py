@@ -13,8 +13,7 @@ class StartFrame(ttk.Frame):
         self.parent = parent
         self.controller = controller
 
-        connect_button = ttk.Button(self, text="Connect to DexChat", style="Accent.TButton",
-                                    command=self.controller.open_connect_frame)
+        connect_button = ttk.Button(self, text="Connect to DexChat", style="Accent.TButton", command=self.controller.open_connect_frame)
         host_button = ttk.Button(self, text="Host DexChat", command=self.controller.open_host_frame)
 
         connect_button.place(x=137, y=20, anchor="n")
@@ -54,8 +53,7 @@ class ConnectFrame(ttk.Frame):
         self.port_entry.bind("<FocusOut>", lambda event: self.focus_out(event, self.port_entry, "(default port 25000)"))
 
         self.nickname_entry.bind("<FocusIn>", lambda event: self.focus_in(event, self.nickname_entry))
-        self.nickname_entry.bind("<FocusOut>",
-                                 lambda event: self.focus_out(event, self.nickname_entry, "Nickname (optional)"))
+        self.nickname_entry.bind("<FocusOut>", lambda event: self.focus_out(event, self.nickname_entry, "Nickname (optional)"))
 
     @staticmethod
     def add_placeholder(widget, placeholder: str):
@@ -99,18 +97,26 @@ class HostFrame(ttk.Frame):
         self.parent = parent
         self.controller = controller
 
+        # Create widgets
         self.nickname_entry = ttk.Entry(self, width=10, justify="center")
+        self.port_entry = ttk.Entry(self, width=10, justify="center")
         self.start_button = ttk.Button(self, text="Start", style="Accent.TButton", command=self.controller.start_dex_host)
         self.cancel_button = ttk.Button(self, text="Cancel", command=self.controller.cancel_host)
 
+        # Place widgets
         self.nickname_entry.place(x=25, y=30, anchor="nw", width=200, height=40)
-        self.start_button.place(x=125, y=90, anchor="n")
-        self.cancel_button.place(x=125, y=135, anchor="n")
+        self.port_entry.place(x=25, y=80, anchor="nw", width=200, height=40)
+        self.start_button.place(x=125, y=135, anchor="n")
+        self.cancel_button.place(x=125, y=180, anchor="n")
 
         self.add_placeholder(self.nickname_entry, "Nickname (optional)")
+        self.add_placeholder(self.port_entry, "(default port 25000)")
+
         self.nickname_entry.bind("<FocusIn>", lambda event: self.focus_in(event, self.nickname_entry))
-        self.nickname_entry.bind("<FocusOut>",
-                                 lambda event: self.focus_out(event, self.nickname_entry, "Nickname (optional)"))
+        self.nickname_entry.bind("<FocusOut>", lambda event: self.focus_out(event, self.nickname_entry, "Nickname (optional)"))
+
+        self.port_entry.bind("<FocusIn>", lambda event: self.focus_in(event, self.port_entry))
+        self.port_entry.bind("<FocusOut>", lambda event: self.focus_out(event, self.port_entry, "(default port 25000)"))
 
     @staticmethod
     def add_placeholder(widget, placeholder: str):
@@ -135,8 +141,7 @@ class DexFrame(ttk.Frame):
         button_frame = ttk.Frame(self, width=550, height=80)
         self.voice_button = ttk.Button(button_frame, text="Enable Voice", width=10, command=self.enable_voice)
         self.theme_button = ttk.Button(button_frame, text="Light Mode", width=10, command=self.change_theme)
-        disconnect_button = ttk.Button(button_frame, text="Disconnect", width=10, style="Accent.TButton",
-                                       command=self.controller.disconnect)
+        disconnect_button = ttk.Button(button_frame, text="Disconnect", width=10, style="Accent.TButton", command=self.controller.disconnect)
 
         button_frame.place(x=0, y=0, anchor="nw")
         self.voice_button.place(x=525, y=22, anchor="ne", width=150, height=40)
@@ -147,10 +152,8 @@ class DexFrame(ttk.Frame):
         chat_labelframe = ttk.LabelFrame(chat_frame, text="Chat", labelanchor="n", width=500, height=353)
 
         status_frame = ttk.Frame(self, width=550, height=250)
-        chat_peer_labelframe = ttk.LabelFrame(status_frame, width=230, height=175, text="Connected Peers: Chat",
-                                              labelanchor="n")
-        voice_peer_labelframe = ttk.LabelFrame(status_frame, width=230, height=175, text="Connected Peers: Voice",
-                                               labelanchor="n")
+        chat_peer_labelframe = ttk.LabelFrame(status_frame, width=230, height=175, text="Connected Peers: Chat", labelanchor="n")
+        voice_peer_labelframe = ttk.LabelFrame(status_frame, width=230, height=175, text="Connected Peers: Voice", labelanchor="n")
 
         if platform == "win32":
             self.status_box = Listbox(chat_frame, width=68, height=4, bd=0)
@@ -196,12 +199,10 @@ class DexFrame(ttk.Frame):
         self.status_box.insert(END, "System (INFO): Encryption Enabled.")
         self.status_box.insert(END, "System (INFO): Voice Disabled.")
 
-        if platform == "win32":
-            self.status_box.insert(END,
-                                   "-----------------------------------------------------------------------------------------------")
+        if platform == "win32" or platform == "linux":
+            self.status_box.insert(END, "-----------------------------------------------------------------------------------------------")
         elif platform == "darwin":
-            self.status_box.insert(END,
-                                   "--------------------------------------------------------------------------------------------------")
+            self.status_box.insert(END, "--------------------------------------------------------------------------------------------------")
 
         self.status_box.itemconfig(0, {"fg": "green"})
         self.status_box.itemconfig(1, {"fg": "green"})
@@ -211,8 +212,7 @@ class DexFrame(ttk.Frame):
 
         self.connected_chat.itemconfig(0, {"fg": "green"})
 
-        quote_label = Label(self, text="Simplicity, carried to the extreme, becomes elegance.",
-                            font=("Courier", 11, "italic"), justify="center")
+        quote_label = Label(self, text="Simplicity, carried to the extreme, becomes elegance.", font=("Courier", 11, "italic"), justify="center")
         quote_label.place(x=275, y=655, anchor="center")
 
     def change_theme(self):
@@ -258,7 +258,7 @@ class App:
         self.root.title("DexChat")
         self.root.geometry("275x115")
         self.root.resizable(False, False)
-        self.root.call("source", "../static/themes/azure.tcl")
+        self.root.call("source", "./static/themes/azure.tcl")
         self.root.call("set_theme", "dark")
 
         self.IP = None
@@ -283,9 +283,9 @@ class App:
 
     def open_host_frame(self):
         self.start_frame.destroy()
-        self.resize_root(250, 190)
+        self.resize_root(250, 230)
 
-        self.host_frame = HostFrame(self, self.root, width=250, height=190)
+        self.host_frame = HostFrame(self, self.root, width=250, height=230)
         self.host_frame.place(x=0, y=0)
 
     def start_dex_host(self):
