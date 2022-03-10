@@ -4,7 +4,7 @@ from threading import Thread
 from tkinter import Tk, BooleanVar, END, messagebox, Listbox, Label
 from tkinter import ttk
 
-from modules.communication2 import ChatNetwork
+from modules.communication import ChatNetwork
 
 
 class StartFrame(ttk.Frame):

@@ -5,7 +5,7 @@ from tkinter import Tk, Listbox, END, BooleanVar, messagebox
 from tkinter import ttk
 import requests
 
-from modules.communication2 import ChatNetwork
+from modules.communication import ChatNetwork
 
 
 class GUI:

@@ -2,24 +2,27 @@ import socket
 import sys
 import threading
 import json
-import requests
+import datetime
+
+from tkinter import END
 
 import pyaudio
 
 
 class ChatNetwork:
-    def __init__(self, host: str, port: int):
+    def __init__(self, app):
         """
         Initiates a server and client socket. Clients will connect to servers
         and servers will connect to clients.
 
-        :param host:
-        :param port:
-        :return:
+        :param app:
         """
 
+        self.app = app
+
         # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
-        self.my_ip = requests.get("https://ifconfig.me/ip").text
+        self.my_ip = '100.67.164.33'  # TODO: REMOVE THIS AND CHANGE BACK TO IFCONFIG.ME IP
+        self.my_nick = None
 
         # Create ALIVE flag. server_accept will wait for this flag and gracefully close.
         self.ALIVE = True
@@ -27,10 +30,11 @@ class ChatNetwork:
         # Create a peer discovery filter and a peer connection storage for multiple, simultaneous connections.
         self.peers = {}
         self.peer_filter = {}
+        self.nicks = {}
 
         # Assign socket attributes.
-        self.host = host
-        self.port = port
+        # self.host = host
+        # self.port = port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind(("0.0.0.0", 25000))
@@ -60,6 +64,7 @@ class ChatNetwork:
             # If a connection with this peer's server already exists (user may have connected first), create a thread to receive messages.
             # Threads are Daemon to prevent blocking.
             if address[0] in self.peers.keys():
+                self.client_send("/nickname")
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
 
@@ -74,13 +79,14 @@ class ChatNetwork:
 
                 # Broadcast a peer discovery.
                 self.dispatch_peers()
+                self.client_send("/nickname")
 
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
 
     def server_receive(self, connection: socket.socket, address: tuple):
         """
-        Threaded instance listening for imcoming messages and filtering based on packets.
+        Threaded instance listening for incoming messages and filtering based on packets.
 
         :param connection:
         :param address:
@@ -102,6 +108,9 @@ class ChatNetwork:
 
                     # Remove peer from current connections.
                     del self.peers[remote_ip]
+                    connected_ip = self.app.dex_frame.connected_chat.get(0, END).index(f"{self.nicks[remote_ip]} ({remote_ip})")
+                    del self.nicks[remote_ip]
+                    self.app.dex_frame.connected_chat.delete(connected_ip)
                     connection.close()
                     sys.exit()
 
@@ -118,10 +127,19 @@ class ChatNetwork:
                             new_client.connect((address, peer_filter.get(address)))
                             self.peers[address] = new_client
 
+                elif "/nickname" in message.decode():
+                    nickname = message.decode().split("+")[1]
+                    ip = connection.getpeername()[0]
+                    self.nicks[ip] = nickname
+
+                    if nickname != "None":
+                        self.app.dex_frame.connected_chat.insert(END, f"{nickname} ({ip})")
+                    else:
+                        self.app.dex_frame.connected_chat.insert(END, f"{ip}")
+
                 # Output incoming message.
                 else:
-                    sys.stdout.write(message.decode())
-                    sys.stdout.flush()
+                    self.app.dex_frame.chat_box.insert(END, f"{message.decode()}")
 
             # Broken connection.
             except OSError:
@@ -129,46 +147,37 @@ class ChatNetwork:
                 connection.close()
                 sys.exit()
 
-    def client_send(self):
+    def client_send(self, message):
         """
         Threaded instance takes user input and filters based on packet. Send globally to peers in current discovery.
 
         :return:
         """
-        while True:
-            # Take input from user.
-            message = input("Message: ")
 
-            # Filter message. If connection attempt, connected self.client to the provided parameters when initialised.
-            if message == "/connect":
-                try:
-                    # Connect to provided paramters and add to global discovery.
-                    self.client.connect((self.host, self.port))
-                    self.peers[self.host] = self.client
-
-                    voice_object = VoiceNetwork(self.host, 26000)
-                    threading.Thread(target=voice_object.server_accept, daemon=True).start()
-                    threading.Thread(target=voice_object.client_send).start()
-
-                except ConnectionError as error:
-                    print(error)
-
-            # If disconnect request, attach public IP to packet and broadcast to current peer discovery.
-            elif message == "/disconnect":
-                try:
-                    for address in self.peers:
-                        self.peers.get(address).send((message + "+" + self.my_ip).encode())
-                        self.peers.get(address).close()
-
-                    # Reset ALIVE flag to disable server_receive thread.
-                    self.ALIVE = False
-                    sys.exit()
-                except ConnectionError as error:
-                    print(error)
-            # Broadcast message to current peer discovery.
-            else:
+        # If disconnect request, attach public IP to packet and broadcast to current peer discovery.
+        if message == "/disconnect":
+            try:
                 for address in self.peers:
-                    self.peers.get(address).send(message.encode())
+                    self.peers.get(address).send((message + "+" + self.my_ip).encode())
+                    self.peers.get(address).close()
+
+                # Reset ALIVE flag to disable server_receive thread.
+                self.ALIVE = False
+                sys.exit()
+            except ConnectionError as error:
+                print(error)
+        elif message == "/nickname":
+            for address in self.peers:
+                self.peers.get(address).send(f"/nickname+{self.my_nick}".encode())
+        # Broadcast message to current peer discovery.
+        else:
+            for address in self.peers:
+                self.app.dex_frame.chat_box.insert(END, f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
+
+                if self.my_nick is None:
+                    self.peers.get(address).send(f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}".encode())
+                else:
+                    self.peers.get(address).send(f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_nick}]: {message}".encode())
 
     def dispatch_peers(self):
         """
@@ -178,6 +187,22 @@ class ChatNetwork:
         """
         for address in self.peers:
             self.peers.get(address).send(("peer_filter+" + json.dumps(self.peer_filter)).encode())
+
+    def connect(self, host, port):
+        try:
+            # Connect to provided parameters and add to global discovery.
+            self.client.connect((host, port))
+            self.peers[host] = self.client
+
+            # voice_object = VoiceNetwork(host, 26000)
+            # threading.Thread(target=voice_object.server_receive, daemon=True).start()
+            # threading.Thread(target=voice_object.client_send).start()
+
+        except ConnectionError as error:
+            print(error)
+
+    def set_nick(self, nickname):
+        self.my_nick = nickname
 
 
 class VoiceNetwork:
@@ -228,8 +253,6 @@ class VoiceNetwork:
         """
         Threaded instance listening for incoming messages and filtering based on packets.
 
-        :param connection:
-        :param address:
         :return:
         """
         while True:
