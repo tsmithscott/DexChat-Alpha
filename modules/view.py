@@ -46,25 +46,25 @@ class ConnectFrame(ttk.Frame):
         self.add_placeholder(self.port_entry, "(default port 25000)")
         self.add_placeholder(self.nickname_entry, "Nickname (optional)")
 
-        self.ip_entry.bind("<FocusIn>", lambda event: self.focus_in(event, self.ip_entry))
-        self.ip_entry.bind("<FocusOut>", lambda event: self.focus_out(event, self.ip_entry, "IP Address"))
+        self.ip_entry.bind("<FocusIn>", lambda event: self.focus_in(self.ip_entry))
+        self.ip_entry.bind("<FocusOut>", lambda event: self.focus_out(self.ip_entry, "IP Address"))
 
-        self.port_entry.bind("<FocusIn>", lambda event: self.focus_in(event, self.port_entry))
-        self.port_entry.bind("<FocusOut>", lambda event: self.focus_out(event, self.port_entry, "(default port 25000)"))
+        self.port_entry.bind("<FocusIn>", lambda event: self.focus_in(self.port_entry))
+        self.port_entry.bind("<FocusOut>", lambda event: self.focus_out(self.port_entry, "(default port 25000)"))
 
-        self.nickname_entry.bind("<FocusIn>", lambda event: self.focus_in(event, self.nickname_entry))
-        self.nickname_entry.bind("<FocusOut>", lambda event: self.focus_out(event, self.nickname_entry, "Nickname (optional)"))
+        self.nickname_entry.bind("<FocusIn>", lambda event: self.focus_in(self.nickname_entry))
+        self.nickname_entry.bind("<FocusOut>", lambda event: self.focus_out(self.nickname_entry, "Nickname (optional)"))
 
     @staticmethod
     def add_placeholder(widget, placeholder: str):
         widget.insert(0, placeholder)
 
     @staticmethod
-    def focus_in(event, widget):
+    def focus_in(widget):
         if widget.get() == "IP Address" or widget.get() == "(default port 25000)" or widget.get() == "Nickname (optional)":
             widget.delete(0, END)
 
-    def focus_out(self, event, widget, placeholder: str):
+    def focus_out(self, widget, placeholder: str):
         if not widget.get():
             self.add_placeholder(widget, placeholder)
 
@@ -112,22 +112,22 @@ class HostFrame(ttk.Frame):
         self.add_placeholder(self.nickname_entry, "Nickname (optional)")
         self.add_placeholder(self.port_entry, "(default port 25000)")
 
-        self.nickname_entry.bind("<FocusIn>", lambda event: self.focus_in(event, self.nickname_entry))
-        self.nickname_entry.bind("<FocusOut>", lambda event: self.focus_out(event, self.nickname_entry, "Nickname (optional)"))
+        self.nickname_entry.bind("<FocusIn>", lambda event: self.focus_in(self.nickname_entry))
+        self.nickname_entry.bind("<FocusOut>", lambda event: self.focus_out(self.nickname_entry, "Nickname (optional)"))
 
-        self.port_entry.bind("<FocusIn>", lambda event: self.focus_in(event, self.port_entry))
-        self.port_entry.bind("<FocusOut>", lambda event: self.focus_out(event, self.port_entry, "(default port 25000)"))
+        self.port_entry.bind("<FocusIn>", lambda event: self.focus_in(self.port_entry))
+        self.port_entry.bind("<FocusOut>", lambda event: self.focus_out(self.port_entry, "(default port 25000)"))
 
     @staticmethod
     def add_placeholder(widget, placeholder: str):
         widget.insert(0, placeholder)
 
     @staticmethod
-    def focus_in(event, widget):
+    def focus_in(widget):
         if widget.get() == "IP Address" or widget.get() == "(default port 25000)" or widget.get() == "Nickname (optional)":
             widget.delete(0, END)
 
-    def focus_out(self, event, widget, placeholder: str):
+    def focus_out(self, widget, placeholder: str):
         if not widget.get():
             self.add_placeholder(widget, placeholder)
 
@@ -138,16 +138,19 @@ class DexFrame(ttk.Frame):
         self.parent = parent
         self.controller = controller
 
+        # Create button frame and buttons
         button_frame = ttk.Frame(self, width=550, height=80)
         self.voice_button = ttk.Button(button_frame, text="Enable Voice", width=10, command=self.enable_voice)
         self.theme_button = ttk.Button(button_frame, text="Light Mode", width=10, command=self.change_theme)
         disconnect_button = ttk.Button(button_frame, text="Disconnect", width=10, style="Accent.TButton", command=self.controller.disconnect)
 
+        # Place button frame and buttons
         button_frame.place(x=0, y=0, anchor="nw")
         self.voice_button.place(x=525, y=22, anchor="ne", width=150, height=40)
         self.theme_button.place(x=25, y=22, anchor="nw", width=150, height=40)
         disconnect_button.place(x=275, y=22, anchor="n", width=120, height=40)
 
+        # Create chat frame and
         chat_frame = ttk.Frame(self, width=550, height=363)
         chat_labelframe = ttk.LabelFrame(chat_frame, text="Chat", labelanchor="n", width=500, height=353)
 

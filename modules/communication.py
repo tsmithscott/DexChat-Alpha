@@ -10,15 +10,15 @@ import pyaudio
 
 
 class ChatNetwork:
-    def __init__(self, app):
+    def __init__(self, controller):
         """
         Initiates a server and client socket. Clients will connect to servers
         and servers will connect to clients.
 
-        :param app:
+        :param controller:
         """
 
-        self.app = app
+        self.controller = controller
 
         # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
         self.my_ip = '100.67.164.33'  # TODO: REMOVE THIS AND CHANGE BACK TO IFCONFIG.ME IP
@@ -51,7 +51,6 @@ class ChatNetwork:
 
         :return:
         """
-
         # Always listen for connection. Stop when exiting.
         while True:
             # Check if program is exiting.
@@ -108,9 +107,9 @@ class ChatNetwork:
 
                     # Remove peer from current connections.
                     del self.peers[remote_ip]
-                    connected_ip = self.app.dex_frame.connected_chat.get(0, END).index(f"{self.nicks[remote_ip]} ({remote_ip})")
+                    connected_ip = self.controller.dex_frame.connected_chat.get(0, END).index(f"{self.nicks[remote_ip]} ({remote_ip})")
                     del self.nicks[remote_ip]
-                    self.app.dex_frame.connected_chat.delete(connected_ip)
+                    self.controller.dex_frame.connected_chat.delete(connected_ip)
                     connection.close()
                     sys.exit()
 
@@ -133,13 +132,13 @@ class ChatNetwork:
                     self.nicks[ip] = nickname
 
                     if nickname != "None":
-                        self.app.dex_frame.connected_chat.insert(END, f"{nickname} ({ip})")
+                        self.controller.dex_frame.connected_chat.insert(END, f"{nickname} ({ip})")
                     else:
-                        self.app.dex_frame.connected_chat.insert(END, f"{ip}")
+                        self.controller.dex_frame.connected_chat.insert(END, f"{ip}")
 
                 # Output incoming message.
                 else:
-                    self.app.dex_frame.chat_box.insert(END, f"{message.decode()}")
+                    self.controller.dex_frame.chat_box.insert(END, f"{message.decode()}")
 
             # Broken connection.
             except OSError:
@@ -172,7 +171,7 @@ class ChatNetwork:
         # Broadcast message to current peer discovery.
         else:
             for address in self.peers:
-                self.app.dex_frame.chat_box.insert(END, f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
+                self.controller.dex_frame.chat_box.insert(END, f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
 
                 if self.my_nick is None:
                     self.peers.get(address).send(f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}".encode())
