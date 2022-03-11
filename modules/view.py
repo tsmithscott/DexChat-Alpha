@@ -325,9 +325,8 @@ class App:
         self.resize_root(550, 685)
 
         self.CHAT = ChatNetwork(self)
-        Thread(target=self.CHAT.server_accept, daemon=True).start()
-
         self.CHAT.set_nick(self.NICK)
+        Thread(target=self.CHAT.server_accept, daemon=True).start()
 
         self.dex_frame = DexFrame(self, self.root, width=550, height=685)
         self.dex_frame.place(x=0, y=0)
