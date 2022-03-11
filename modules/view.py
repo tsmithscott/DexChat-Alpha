@@ -82,19 +82,19 @@ class ConnectFrame(ttk.Frame):
             if port == "(default port 25000)":
                 if nick == "Nickname (optional)":
                     # DEFAULT CLIENT
-                    self.controller.CHAT = ChatNetwork(self.controller)
+                    self.controller.CHAT_CONTROLLER = ChatNetwork(self.controller)
                 else:
                     # NICK + DEFAULT PORT CLIENT
-                    self.controller.CHAT = ChatNetwork(self.controller, nick=nick)
+                    self.controller.CHAT_CONTROLLER = ChatNetwork(self.controller, nick=nick)
             else:
                 if nick == "Nickname (optional)":
                     # SPECIFIC PORT + NON-NICK
-                    self.controller.CHAT = ChatNetwork(self.controller, port=int(port))
+                    self.controller.CHAT_CONTROLLER = ChatNetwork(self.controller, port=int(port))
                 else:
                     # SPECIFIC PORT + NICK
-                    self.controller.CHAT = ChatNetwork(self.controller, port=int(port), nick=nick)
+                    self.controller.CHAT_CONTROLLER = ChatNetwork(self.controller, port=int(port), nick=nick)
 
-            Thread(target=self.controller.CHAT.server_accept, daemon=True).start()
+            Thread(target=self.controller.CHAT_CONTROLLER.server_accept, daemon=True).start()
 
             if port == "(default port 25000)":
                 self.controller.CHAT.connect(ip, 25000)
@@ -150,18 +150,18 @@ class HostFrame(ttk.Frame):
 
         if nick == "Nickname (optional)":
             if port == "(default port 25000)":
-                self.controller.CHAT = ChatNetwork(self.controller)
+                self.controller.CHAT_CONTROLLER = ChatNetwork(self.controller)
             else:
-                self.controller.CHAT = ChatNetwork(self.controller, port=int(port))
+                self.controller.CHAT_CONTROLLER = ChatNetwork(self.controller, port=int(port))
         else:
             if port == "(default port 25000)":
                 # RUN NICK + DEFAULT PORT HOST
-                self.controller.CHAT = ChatNetwork(self.controller, nick=nick)
+                self.controller.CHAT_CONTROLLER = ChatNetwork(self.controller, nick=nick)
             else:
                 # RUN NICK + SPECIFIC PORT
-                self.controller.CHAT = ChatNetwork(self.controller, port=int(port), nick=nick)
+                self.controller.CHAT_CONTROLLER = ChatNetwork(self.controller, port=int(port), nick=nick)
 
-        Thread(target=self.controller.CHAT.server_accept, daemon=True).start()
+        Thread(target=self.controller.CHAT_CONTROLLER.server_accept, daemon=True).start()
         self.controller.open_dex_frame()
 
 
