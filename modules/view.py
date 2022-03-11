@@ -71,24 +71,41 @@ class ConnectFrame(ttk.Frame):
     def configure_dex_chat(self):
         if not self.ip_entry.get() or self.ip_entry.get() == "IP Address" or (self.ip_entry.get()).isspace():
             messagebox.showerror("DexChat", "You must enter an IP address to start DexChat!")
-        elif not self.port_entry.get or (self.port_entry.get()).isspace():
+        elif not self.port_entry.get() or (self.port_entry.get()).isspace():
             if (self.port_entry.get()).isspace():
                 messagebox.showerror("DexChat", "You must enter a specific port or leave as default port: 25000!")
         else:
-            self.controller.IP = self.ip_entry.get()
+            ip = self.ip_entry.get()
+            port = self.port_entry.get()
+            nick = self.nickname_entry.get()
 
-            if self.port_entry.get() == "(default port 25000)":
-                self.controller.PORT = 25000
+            if port == "(default port 25000)":
+                if nick == "Nickname (optional)":
+                    # DEFAULT CLIENT
+                    print("default config - running default chat")
+                    self.controller.CHAT = ChatNetwork(self.controller)
+                else:
+                    # NICK + DEFAULT PORT CLIENT
+                    print("default port, nick - running custom chat")
+                    self.controller.CHAT = ChatNetwork(self.controller, nick=nick)
             else:
-                self.controller.PORT = int(self.port_entry.get())
+                if nick == "Nickname (optional)":
+                    # SPECIFIC PORT + NON-NICK
+                    print("port, no nick - running custom chat")
+                    self.controller.CHAT = ChatNetwork(self.controller, port=int(port))
+                else:
+                    # SPECIFIC PORT + NICK
+                    print("port, nick - running custom chat")
+                    self.controller.CHAT = ChatNetwork(self.controller, port=int(port), nick=nick)
 
-            if self.nickname_entry.get() != "Nickname (optional)":
-                self.controller.NICK = self.nickname_entry.get()
+            Thread(target=self.controller.CHAT.server_accept, daemon=True).start()
 
-                self.controller.start_dex_client()
+            if port == "(default port 25000)":
+                self.controller.CHAT.connect(ip, 25000)
             else:
-                self.controller.NICK = None
-                self.controller.start_dex_client()
+                self.controller.CHAT.connect(ip, int(port))
+
+            self.controller.open_dex_frame()
 
 
 class HostFrame(ttk.Frame):
@@ -133,20 +150,20 @@ class HostFrame(ttk.Frame):
 
     def configure_dex_chat(self):
         nick = self.nickname_entry.get()
-        port = int(self.port_entry.get())
+        port = self.port_entry.get()
 
         if nick == "Nickname (optional)":
             if port == "(default port 25000)":
                 self.controller.CHAT = ChatNetwork(self.controller)
             else:
-                self.controller.CHAT = ChatNetwork(self.controller, port=port)
+                self.controller.CHAT = ChatNetwork(self.controller, port=int(port))
         else:
             if port == "(default port 25000)":
                 # RUN NICK + DEFAULT PORT HOST
                 self.controller.CHAT = ChatNetwork(self.controller, nick=nick)
             else:
                 # RUN NICK + SPECIFIC PORT
-                self.controller.CHAT = ChatNetwork(self.controller, port=port, nick=nick)
+                self.controller.CHAT = ChatNetwork(self.controller, port=int(port), nick=nick)
 
         Thread(target=self.controller.CHAT.server_accept, daemon=True).start()
         self.controller.open_dex_frame()
@@ -315,26 +332,12 @@ class App:
         self.host_frame.place(x=0, y=0)
 
     def open_dex_frame(self):
-        self.host_frame.destroy()
-        self.resize_root(550, 685)
-
-        self.dex_frame = DexFrame(self, self.root, width=550, height=685)
-        self.dex_frame.place(x=0, y=0)
-
-    def start_dex_host(self):
-        nick = self.host_frame.nickname_entry.get()
-        port = self.host_frame.port_entry.get()
-
-        self.host_frame.destroy()
-        self.resize_root(550, 685)
-
-        if nick == "Nickname (optional)":
-            self.CHAT.set_nick(None)
+        if self.host_frame:
+            self.host_frame.destroy()
         else:
-            self.CHAT.set_nick(nick)
+            self.connect_frame.destroy()
 
-        self.CHAT = ChatNetwork(self)
-        Thread(target=self.CHAT.server_accept, daemon=True).start()
+        self.resize_root(550, 685)
 
         self.dex_frame = DexFrame(self, self.root, width=550, height=685)
         self.dex_frame.place(x=0, y=0)

@@ -32,10 +32,10 @@ class ChatNetwork:
 
         # Assign socket attributes.
         # self.host = host
-        # self.port = port
+        self.port = port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server.bind(("0.0.0.0", port))
+        self.server.bind(("0.0.0.0", self.port))
 
         # Listen for a maximum of 100 connections.
         self.server.listen(100)
@@ -69,11 +69,11 @@ class ChatNetwork:
             # If connection doesn't exists, create a new instance of a connection with the peer's server.
             else:
                 new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                new_client.connect((address[0], 25000))
+                new_client.connect((address[0], self.port))
 
                 # Add the new connection to a global peer discovery.
                 self.peers[address[0]] = new_client
-                self.peer_filter[address[0]] = 25000
+                self.peer_filter[address[0]] = self.port
 
                 # Broadcast a peer discovery.
                 self.dispatch_peers()
