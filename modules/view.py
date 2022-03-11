@@ -82,20 +82,16 @@ class ConnectFrame(ttk.Frame):
             if port == "(default port 25000)":
                 if nick == "Nickname (optional)":
                     # DEFAULT CLIENT
-                    print("default config - running default chat")
                     self.controller.CHAT = ChatNetwork(self.controller)
                 else:
                     # NICK + DEFAULT PORT CLIENT
-                    print("default port, nick - running custom chat")
                     self.controller.CHAT = ChatNetwork(self.controller, nick=nick)
             else:
                 if nick == "Nickname (optional)":
                     # SPECIFIC PORT + NON-NICK
-                    print("port, no nick - running custom chat")
                     self.controller.CHAT = ChatNetwork(self.controller, port=int(port))
                 else:
                     # SPECIFIC PORT + NICK
-                    print("port, nick - running custom chat")
                     self.controller.CHAT = ChatNetwork(self.controller, port=int(port), nick=nick)
 
             Thread(target=self.controller.CHAT.server_accept, daemon=True).start()
@@ -304,11 +300,8 @@ class App:
         self.root.call("source", "static/themes/azure.tcl")
         self.root.call("set_theme", "dark")
 
-        self.IP = None
-        self.PORT = None
-        self.NICK = None
         self.VOICE_ENABLED = BooleanVar(self.root)
-        self.CHAT = None
+        self.CHAT_CONTROLLER = None
 
         self.start_frame = StartFrame(self, self.root, width=275, height=115)
         self.connect_frame = None
@@ -342,30 +335,11 @@ class App:
         self.dex_frame = DexFrame(self, self.root, width=550, height=685)
         self.dex_frame.place(x=0, y=0)
 
-    def start_dex_client(self):
-        nick = self.connect_frame.nickname_entry.get()
-
-        self.connect_frame.destroy()
-        self.resize_root(550, 685)
-
-        self.CHAT = ChatNetwork(self)
-        Thread(target=self.CHAT.server_accept, daemon=True).start()
-
-        if nick == "Nickname (optional)":
-            self.CHAT.set_nick(None)
-        else:
-            self.CHAT.set_nick(nick)
-
-        self.CHAT.connect(self.IP, self.PORT)
-
-        self.dex_frame = DexFrame(self, self.root, width=550, height=685)
-        self.dex_frame.place(x=0, y=0)
-
     def resize_root(self, width, height):
         self.root.geometry(f"{width}x{height}")
 
     def disconnect(self):
-        self.CHAT.client_send("/disconnect")
+        self.CHAT_CONTROLLER.client_send("/disconnect")
         self.resize_root(275, 115)
         self.dex_frame.destroy()
         self.start_frame = StartFrame(self, self.root, width=275, height=115)
