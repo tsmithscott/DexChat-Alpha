@@ -71,7 +71,7 @@ class ConnectFrame(ttk.Frame):
     def configure_dex_chat(self):
         if not self.ip_entry.get() or self.ip_entry.get() == "IP Address" or (self.ip_entry.get()).isspace():
             messagebox.showerror("DexChat", "You must enter an IP address to start DexChat!")
-        elif not self.port_entry.get() or (self.port_entry.get()).isspace():
+        elif not self.port_entry.get or (self.port_entry.get()).isspace():
             if (self.port_entry.get()).isspace():
                 messagebox.showerror("DexChat", "You must enter a specific port or leave as default port: 25000!")
         else:
@@ -84,10 +84,11 @@ class ConnectFrame(ttk.Frame):
 
             if self.nickname_entry.get() != "Nickname (optional)":
                 self.controller.NICK = self.nickname_entry.get()
+
+                self.controller.start_dex_client()
             else:
                 self.controller.NICK = None
-
-            self.controller.start_dex_client()
+                self.controller.start_dex_client()
 
 
 class HostFrame(ttk.Frame):
@@ -99,7 +100,7 @@ class HostFrame(ttk.Frame):
         # Create widgets
         self.nickname_entry = ttk.Entry(self, width=10, justify="center")
         self.port_entry = ttk.Entry(self, width=10, justify="center")
-        self.start_button = ttk.Button(self, text="Start", style="Accent.TButton", command=self.controller.start_dex_host)
+        self.start_button = ttk.Button(self, text="Start", style="Accent.TButton", command=self.configure_dex_chat)
         self.cancel_button = ttk.Button(self, text="Cancel", command=self.controller.cancel_host)
 
         # Place widgets
@@ -130,22 +131,25 @@ class HostFrame(ttk.Frame):
         if not widget.get():
             self.add_placeholder(widget, placeholder)
 
-    def configure_dex_chat(self):  # TODO: Bind to start button and add handling for custom port in communication.py and controller.start_dex_host()
-        if not self.port_entry.get() or (self.port_entry.get()).isspace():
-            if (self.port_entry.get()).isspace():
-                messagebox.showerror("DexChat", "You must enter a specific port or leave as default port: 25000!")
+    def configure_dex_chat(self):
+        nick = self.nickname_entry.get()
+        port = int(self.port_entry.get())
+
+        if nick == "Nickname (optional)":
+            if port == "(default port 25000)":
+                self.controller.CHAT = ChatNetwork(self.controller)
+            else:
+                self.controller.CHAT = ChatNetwork(self.controller, port=port)
         else:
-            if self.nickname_entry.get() != "Nickname (optional)":
-                self.controller.NICK = self.nickname_entry.get()
+            if port == "(default port 25000)":
+                # RUN NICK + DEFAULT PORT HOST
+                self.controller.CHAT = ChatNetwork(self.controller, nick=nick)
             else:
-                self.controller.NICK = None
+                # RUN NICK + SPECIFIC PORT
+                self.controller.CHAT = ChatNetwork(self.controller, port=port, nick=nick)
 
-            if self.port_entry.get() == "(default port 25000)":
-                self.controller.PORT = 25000
-            else:
-                self.controller.PORT = int(self.port_entry.get())
-
-            self.controller.start_dex_host()
+        Thread(target=self.controller.CHAT.server_accept, daemon=True).start()
+        self.controller.open_dex_frame()
 
 
 class DexFrame(ttk.Frame):
@@ -154,13 +158,12 @@ class DexFrame(ttk.Frame):
         self.parent = parent
         self.controller = controller
 
-        # Create button frame and buttons
         button_frame = ttk.Frame(self, width=550, height=80)
         self.voice_button = ttk.Button(button_frame, text="Enable Voice", width=10, command=self.enable_voice)
         self.theme_button = ttk.Button(button_frame, text="Light Mode", width=10, command=self.change_theme)
-        disconnect_button = ttk.Button(button_frame, text="Disconnect", width=10, style="Accent.TButton", command=self.controller.disconnect)
+        disconnect_button = ttk.Button(button_frame, text="Disconnect", width=10, style="Accent.TButton",
+                                       command=self.controller.disconnect)
 
-        # Place button frame and buttons
         button_frame.place(x=0, y=0, anchor="nw")
         self.voice_button.place(x=525, y=22, anchor="ne", width=150, height=40)
         self.theme_button.place(x=25, y=22, anchor="nw", width=150, height=40)
@@ -170,8 +173,10 @@ class DexFrame(ttk.Frame):
         chat_labelframe = ttk.LabelFrame(chat_frame, text="Chat", labelanchor="n", width=500, height=353)
 
         status_frame = ttk.Frame(self, width=550, height=250)
-        chat_peer_labelframe = ttk.LabelFrame(status_frame, width=230, height=175, text="Connected Peers: Chat", labelanchor="n")
-        voice_peer_labelframe = ttk.LabelFrame(status_frame, width=230, height=175, text="Connected Peers: Voice", labelanchor="n")
+        chat_peer_labelframe = ttk.LabelFrame(status_frame, width=230, height=175, text="Connected Peers: Chat",
+                                              labelanchor="n")
+        voice_peer_labelframe = ttk.LabelFrame(status_frame, width=230, height=175, text="Connected Peers: Voice",
+                                               labelanchor="n")
 
         if platform == "win32":
             self.status_box = Listbox(chat_frame, width=68, height=4, bd=0)
@@ -217,10 +222,12 @@ class DexFrame(ttk.Frame):
         self.status_box.insert(END, "System (INFO): Encryption Enabled.")
         self.status_box.insert(END, "System (INFO): Voice Disabled.")
 
-        if platform == "win32" or platform == "linux":
-            self.status_box.insert(END, "-----------------------------------------------------------------------------------------------")
+        if platform == "win32":
+            self.status_box.insert(END,
+                                   "-----------------------------------------------------------------------------------------------")
         elif platform == "darwin":
-            self.status_box.insert(END, "--------------------------------------------------------------------------------------------------")
+            self.status_box.insert(END,
+                                   "--------------------------------------------------------------------------------------------------")
 
         self.status_box.itemconfig(0, {"fg": "green"})
         self.status_box.itemconfig(1, {"fg": "green"})
@@ -230,7 +237,8 @@ class DexFrame(ttk.Frame):
 
         self.connected_chat.itemconfig(0, {"fg": "green"})
 
-        quote_label = Label(self, text="Simplicity, carried to the extreme, becomes elegance.", font=("Courier", 11, "italic"), justify="center")
+        quote_label = Label(self, text="Simplicity, carried to the extreme, becomes elegance.",
+                            font=("Courier", 11, "italic"), justify="center")
         quote_label.place(x=275, y=655, anchor="center")
 
     def change_theme(self):
@@ -276,7 +284,7 @@ class App:
         self.root.title("DexChat")
         self.root.geometry("275x115")
         self.root.resizable(False, False)
-        self.root.call("source", "./static/themes/azure.tcl")
+        self.root.call("source", "static/themes/azure.tcl")
         self.root.call("set_theme", "dark")
 
         self.IP = None
@@ -306,27 +314,46 @@ class App:
         self.host_frame = HostFrame(self, self.root, width=250, height=230)
         self.host_frame.place(x=0, y=0)
 
+    def open_dex_frame(self):
+        self.host_frame.destroy()
+        self.resize_root(550, 685)
+
+        self.dex_frame = DexFrame(self, self.root, width=550, height=685)
+        self.dex_frame.place(x=0, y=0)
+
+    def start_dex_host(self):
+        nick = self.host_frame.nickname_entry.get()
+        port = self.host_frame.port_entry.get()
+
+        self.host_frame.destroy()
+        self.resize_root(550, 685)
+
+        if nick == "Nickname (optional)":
+            self.CHAT.set_nick(None)
+        else:
+            self.CHAT.set_nick(nick)
+
+        self.CHAT = ChatNetwork(self)
+        Thread(target=self.CHAT.server_accept, daemon=True).start()
+
+        self.dex_frame = DexFrame(self, self.root, width=550, height=685)
+        self.dex_frame.place(x=0, y=0)
+
     def start_dex_client(self):
+        nick = self.connect_frame.nickname_entry.get()
+
         self.connect_frame.destroy()
         self.resize_root(550, 685)
 
         self.CHAT = ChatNetwork(self)
         Thread(target=self.CHAT.server_accept, daemon=True).start()
 
-        self.CHAT.set_nick(self.NICK)
+        if nick == "Nickname (optional)":
+            self.CHAT.set_nick(None)
+        else:
+            self.CHAT.set_nick(nick)
 
         self.CHAT.connect(self.IP, self.PORT)
-
-        self.dex_frame = DexFrame(self, self.root, width=550, height=685)
-        self.dex_frame.place(x=0, y=0)
-
-    def start_dex_host(self):
-        self.host_frame.destroy()
-        self.resize_root(550, 685)
-
-        self.CHAT = ChatNetwork(self)
-        self.CHAT.set_nick(self.NICK)
-        Thread(target=self.CHAT.server_accept, daemon=True).start()
 
         self.dex_frame = DexFrame(self, self.root, width=550, height=685)
         self.dex_frame.place(x=0, y=0)
@@ -355,7 +382,3 @@ class App:
 
     def run(self):
         self.root.mainloop()
-
-
-if __name__ == '__main__':
-    App().run()
