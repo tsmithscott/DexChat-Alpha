@@ -97,9 +97,9 @@ class ConnectFrame(ttk.Frame):
             Thread(target=self.controller.CHAT_CONTROLLER.server_accept, daemon=True).start()
 
             if port == "(default port 25000)":
-                self.controller.CHAT.connect(ip, 25000)
+                self.controller.CHAT_CONTROLLER.connect(ip, 25000)
             else:
-                self.controller.CHAT.connect(ip, int(port))
+                self.controller.CHAT_CONTROLLER.connect(ip, int(port))
 
             self.controller.open_dex_frame()
 
@@ -288,7 +288,7 @@ class DexFrame(ttk.Frame):
 
         self.chat_box.yview(END)
         self.message_entry.delete(0, END)
-        self.controller.CHAT.client_send(message)
+        self.controller.CHAT_CONTROLLER.client_send(message)
 
 
 class App:
