@@ -26,6 +26,8 @@ class ConnectFrame(ttk.Frame):
         self.parent = parent
         self.controller = controller
 
+        self.parent.bind("<Return>", lambda event: self.configure_dex_chat())
+
         # Create input widgets
         self.ip_entry = ttk.Entry(self, width=10, justify="center")
         self.port_entry = ttk.Entry(self, width=10, justify="center")
@@ -110,6 +112,8 @@ class HostFrame(ttk.Frame):
         self.parent = parent
         self.controller = controller
 
+        self.parent.bind("<Return>", lambda event: self.configure_dex_chat())
+
         # Create widgets
         self.nickname_entry = ttk.Entry(self, width=10, justify="center")
         self.port_entry = ttk.Entry(self, width=10, justify="center")
@@ -171,11 +175,13 @@ class DexFrame(ttk.Frame):
         self.parent = parent
         self.controller = controller
 
+        self.parent.protocol("WM_DELETE_WINDOW", self.controller.disconnect)
+        self.parent.unbind("<Return>")
+
         button_frame = ttk.Frame(self, width=550, height=80)
         self.voice_button = ttk.Button(button_frame, text="Enable Voice", width=10, command=self.enable_voice)
         self.theme_button = ttk.Button(button_frame, text="Light Mode", width=10, command=self.change_theme)
-        disconnect_button = ttk.Button(button_frame, text="Disconnect", width=10, style="Accent.TButton",
-                                       command=self.controller.disconnect)
+        disconnect_button = ttk.Button(button_frame, text="Disconnect", width=10, style="Accent.TButton", command=self.controller.disconnect)
 
         button_frame.place(x=0, y=0, anchor="nw")
         self.voice_button.place(x=525, y=22, anchor="ne", width=150, height=40)

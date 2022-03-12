@@ -129,12 +129,14 @@ class ChatNetwork:
                 elif "/nickname" in message.decode():
                     nickname = message.decode().split("+")[1]
                     ip = connection.getpeername()[0]
-                    self.nicks[ip] = nickname
 
-                    if nickname != "None":
-                        self.controller.dex_frame.connected_chat.insert(END, f"{nickname} ({ip})")
-                    else:
-                        self.controller.dex_frame.connected_chat.insert(END, f"{ip}")
+                    if ip not in self.nicks:
+                        if nickname != "None":
+                            self.nicks[ip] = nickname
+                            self.controller.dex_frame.connected_chat.insert(END, f"{nickname} ({ip})")
+                        else:
+                            self.nicks[ip] = None
+                            self.controller.dex_frame.connected_chat.insert(END, f"{ip}")
 
                 # Output incoming message.
                 else:
@@ -171,10 +173,10 @@ class ChatNetwork:
                 self.peers.get(address).send(f"/nickname+{self.my_nick}".encode())
         # Broadcast message to current peer discovery.
         else:
-            for address in self.peers:
-                self.controller.dex_frame.chat_box.insert(END,
-                                                          f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
+            self.controller.dex_frame.chat_box.insert(END, f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
+            self.controller.dex_frame.chat_box.yview(END)
 
+            for address in self.peers:
                 if self.my_nick is None:
                     self.peers.get(address).send(
                         f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}".encode())
