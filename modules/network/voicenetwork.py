@@ -1,15 +1,6 @@
 import socket
-import sys
-import threading
-import json
-import datetime
-
-from tkinter import END
 
 import pyaudio
-
-
-
 
 
 class VoiceNetwork:

@@ -2,7 +2,7 @@ from threading import Thread
 from tkinter import ttk, END
 from tkinter import messagebox
 
-from modules.communication import ChatNetwork
+from modules.network.chatnetwork import ChatNetwork
 
 
 class ConnectFrame(ttk.Frame):

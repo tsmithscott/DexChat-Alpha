@@ -1,7 +1,7 @@
 from threading import Thread
 from tkinter import ttk, END
 
-from modules.communication import ChatNetwork
+from modules.network.chatnetwork import ChatNetwork
 
 
 class HostFrame(ttk.Frame):
