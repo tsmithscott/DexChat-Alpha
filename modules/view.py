@@ -215,9 +215,9 @@ class DexFrame(ttk.Frame):
             self.connected_voice = Listbox(voice_peer_labelframe, width=28, height=11, bd=0)
         elif platform == "linux":
             self.status_box = Listbox(chat_frame, width=53, height=4, bd=0)
-            self.chat_box = Listbox(chat_frame, width=53, height=12, bd=0)
+            self.chat_box = Listbox(chat_frame, width=53, height=11, bd=0)
 
-            self.chat_box.place(x=35, y=71, anchor="nw")
+            self.chat_box.place(x=35, y=90, anchor="nw")
 
             self.connected_chat = Listbox(chat_peer_labelframe, width=22, height=7, bd=0)
             self.connected_voice = Listbox(voice_peer_labelframe, width=22, height=7, bd=0)
@@ -241,7 +241,7 @@ class DexFrame(ttk.Frame):
         self.status_box.insert(END, "System (INFO): Encryption Enabled.")
         self.status_box.insert(END, "System (INFO): Voice Disabled.")
 
-        if platform == "win32":
+        if platform == "win32" or platform == "linux":
             self.status_box.insert(END,
                                    "-----------------------------------------------------------------------------------------------")
         elif platform == "darwin":
