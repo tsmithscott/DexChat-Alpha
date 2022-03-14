@@ -53,7 +53,7 @@ class VoiceNetwork:
 
         :return:
         """
-        while True:
+        while self.ALIVE:
             try:
                 # Accept an incoming message. Buffer can be changed.
                 datagram = self.server.recvfrom(8192)
@@ -75,14 +75,14 @@ class VoiceNetwork:
 
         :return:
         """
-        while True:
+        while self.ALIVE:
             voice = self.streamer_input.read(4096)
 
             for peer in self.peers:
                 self.client.sendto(voice, (peer, self.peers.get(peer)))
 
     def play_voice(self):
-        while True:
+        while self.ALIVE:
             for packet in self.voice_frames:
                 self.streamer_output.write(packet)
                 self.voice_frames.pop(self.voice_frames.index(packet))
@@ -94,3 +94,6 @@ class VoiceNetwork:
         :return:
         """
         pass
+
+    def die(self):
+        self.ALIVE = False

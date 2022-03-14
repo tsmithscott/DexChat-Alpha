@@ -1,8 +1,9 @@
-import datetime
-import json
 import socket
 import sys
 import threading
+import json
+import datetime
+
 from tkinter import END
 
 
@@ -103,9 +104,8 @@ class ChatNetwork:
 
                     # Remove peer from current connections.
                     del self.peers[remote_ip]
-                    connected_ip = self.controller.dex_frame.connected_chat.get(0, END).index(
-                        f"{self.nicks[remote_ip]} ({remote_ip})")
-                    del self.nicks[remote_ip]
+                    connected_ip = self.controller.dex_frame.connected_chat.get(0, END).index(f"{self.controller.NICKS[remote_ip]} ({remote_ip})")
+                    del self.controller.NICKS[remote_ip]
                     self.controller.dex_frame.connected_chat.delete(connected_ip)
                     connection.close()
                     sys.exit()
@@ -127,12 +127,12 @@ class ChatNetwork:
                     nickname = message.decode().split("+")[1]
                     ip = connection.getpeername()[0]
 
-                    if ip not in self.nicks:
+                    if ip not in self.controller.NICKS:
                         if nickname != "None":
-                            self.nicks[ip] = nickname
+                            self.controller.NICKS[ip] = nickname
                             self.controller.dex_frame.connected_chat.insert(END, f"{nickname} ({ip})")
                         else:
-                            self.nicks[ip] = None
+                            self.controller.NICKS[ip] = None
                             self.controller.dex_frame.connected_chat.insert(END, f"{ip}")
 
                 # Output incoming message.
@@ -205,3 +205,6 @@ class ChatNetwork:
 
     def set_nick(self, nickname):
         self.my_nick = nickname
+
+    def get_peers(self):
+        return self.peers

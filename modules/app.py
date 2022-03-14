@@ -17,6 +17,8 @@ class App:
 
         self.VOICE_ENABLED = BooleanVar(self.root)
         self.CHAT_CONTROLLER = None
+        self.VOICE_PEER_OBJECTS = []
+        self.NICKS = {}
 
         self.start_frame = StartFrame(self, self.root, width=275, height=115)
         self.connect_frame = None

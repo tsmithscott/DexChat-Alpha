@@ -1,5 +1,8 @@
+import threading
 from sys import platform
 from tkinter import ttk, Listbox, END, Label
+
+from modules.network.voicenetwork import VoiceNetwork
 
 
 class DexFrame(ttk.Frame):
@@ -14,7 +17,8 @@ class DexFrame(ttk.Frame):
         button_frame = ttk.Frame(self, width=550, height=80)
         self.voice_button = ttk.Button(button_frame, text="Enable Voice", width=10, command=self.enable_voice)
         self.theme_button = ttk.Button(button_frame, text="Light Mode", width=10, command=self.change_theme)
-        disconnect_button = ttk.Button(button_frame, text="Disconnect", width=10, style="Accent.TButton", command=self.controller.disconnect)
+        disconnect_button = ttk.Button(button_frame, text="Disconnect", width=10, style="Accent.TButton",
+                                       command=self.controller.disconnect)
 
         button_frame.place(x=0, y=0, anchor="nw")
         self.voice_button.place(x=525, y=22, anchor="ne", width=150, height=40)
@@ -103,22 +107,39 @@ class DexFrame(ttk.Frame):
 
     def enable_voice(self):
         self.status_box.delete(2)
+        self.connected_voice.insert(END, "System: Connected")
+        self.connected_voice.itemconfig(0, {"fg": "green"})
+
+        current_chat_peers = self.controller.CHAT_CONTROLLER.get_peers()
+
+        for peer in current_chat_peers:
+            voice_object = VoiceNetwork(peer, current_chat_peers.get(peer))
+
+            self.controller.VOICE_PEER_OBJECTS.append(voice_object)
+
+            threading.Thread(target=voice_object.server_receive, daemon=True).start()
+            threading.Thread(target=voice_object.client_send, daemon=True).start()
+            threading.Thread(target=voice_object.play_voice).start()
+
+            if peer in self.controller.NICKS:
+                self.connected_voice.insert(END, f"{self.controller.NICKS.get(peer)}: {peer}")
+                self.connected_voice.itemconfig(0, {"fg": "green"})
 
         self.status_box.insert(2, "System (INFO): Voice Enabled.")
         self.status_box.itemconfig(2, {"fg": "green"})
-
-        self.connected_voice.insert(END, "System: Connected")
-        self.connected_voice.itemconfig(0, {"fg": "green"})
 
         self.voice_button.configure(text="Disable Voice", command=self.disable_voice)
 
     def disable_voice(self):
         self.status_box.delete(2)
 
+        for voice_objects in self.controller.VOICE_PEER_OBJECTS:
+            voice_objects.die()
+
         self.status_box.insert(2, "System (INFO): Voice Disabled")
         self.status_box.itemconfig(2, {"fg": "red"})
 
-        self.connected_voice.delete(0)
+        self.connected_voice.delete(0, END)
 
         self.voice_button.configure(text="Enable Voice", command=self.enable_voice)
 
