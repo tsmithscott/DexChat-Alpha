@@ -1,9 +1,9 @@
 from tkinter import Tk, BooleanVar
 
-from frames.startframe import StartFrame
-from frames.connectframe import ConnectFrame
-from frames.hostframe import HostFrame
-from frames.dexframe import DexFrame
+from modules.frames.startframe import StartFrame
+from modules.frames.connectframe import ConnectFrame
+from modules.frames.hostframe import HostFrame
+from modules.frames.dexframe import DexFrame
 
 
 class App:
