@@ -6,6 +6,8 @@ from modules.frames.connectframe import ConnectFrame
 from modules.frames.hostframe import HostFrame
 from modules.frames.dexframe import DexFrame
 
+from modules.encryption.crypto import Crypto
+
 
 class App:
     def __init__(self):
@@ -19,7 +21,9 @@ class App:
         self.VOICE_ENABLED = BooleanVar(self.root)
         self.CHAT_CONTROLLER = None
         self.VOICE_PEER_OBJECTS = []
+        self.CRYPTO_CONTROLLER = Crypto()
         self.NICKS = {}
+        self.KEYS = {}
 
         self.start_frame = StartFrame(self, self.root, width=275, height=115)
         self.connect_frame = None

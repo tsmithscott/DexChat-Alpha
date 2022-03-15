@@ -19,6 +19,7 @@ class ChatNetwork:
         # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
         self.my_ip = '100.67.164.33'  # TODO: REMOVE THIS AND CHANGE BACK TO IFCONFIG.ME IP
         self.my_nick = nick
+        self.my_key = self.controller.KEYCHAIN_CONTROLLER.fetch_pub()
 
         # Create ALIVE flag. server_accept will wait for this flag and gracefully close.
         self.ALIVE = True
@@ -91,7 +92,7 @@ class ChatNetwork:
         while True:
             try:
                 # Accept an incoming message. Buffer can be changed.
-                message = connection.recv(4096)
+                message = connection.recv(8192)
 
                 # If a message is a disconnect request.
                 if "/disconnect" in message.decode():
@@ -104,8 +105,8 @@ class ChatNetwork:
 
                     # Remove peer from current connections.
                     del self.peers[remote_ip]
-                    connected_ip = self.controller.dex_frame.connected_chat.get(0, END).index(f"{self.nicks[remote_ip]} ({remote_ip})")
-                    del self.nicks[remote_ip]
+                    connected_ip = self.controller.dex_frame.connected_chat.get(0, END).index(f"{self.controller.NICKS[remote_ip]} ({remote_ip})")
+                    del self.controller.NICKS[remote_ip]
                     self.controller.dex_frame.connected_chat.delete(connected_ip)
                     connection.close()
                     sys.exit()
@@ -114,15 +115,11 @@ class ChatNetwork:
                 elif "peer_filter" in message.decode():
                     # Separate packet header and discovery data.
                     peer_filter = message.decode().split("+")[1]
-                    print(message)
                     peer_filter = json.loads(peer_filter)
-                    print(peer_filter)
 
                     # Filter through peer discovery json. If current peer is not in global discovery, connect and add.
                     for address in peer_filter:
-                        print("Testing: " + address)
                         if address not in self.peers and not address == self.my_ip:
-                            print("New Connection: " + address)
                             new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                             new_client.connect((address, peer_filter.get(address)))
                             self.peers[address] = new_client
@@ -131,12 +128,12 @@ class ChatNetwork:
                     nickname = message.decode().split("+")[1]
                     ip = connection.getpeername()[0]
 
-                    if ip not in self.nicks:
+                    if ip not in self.controller.NICKS:
                         if nickname != "None":
-                            self.nicks[ip] = nickname
+                            self.controller.NICKS[ip] = nickname
                             self.controller.dex_frame.connected_chat.insert(END, f"{nickname} ({ip})")
                         else:
-                            self.nicks[ip] = None
+                            self.controller.NICKS[ip] = None
                             self.controller.dex_frame.connected_chat.insert(END, f"{ip}")
 
                 # Output incoming message.

@@ -128,7 +128,7 @@ class DexFrame(ttk.Frame):
             threading.Thread(target=voice_object.play_voice).start()
 
             if peer in self.controller.NICKS:
-                self.connected_voice.insert(END, f"{self.controller.NICKS.get(peer)}: {peer}")
+                self.connected_voice.insert(END, f"{self.controller.NICKS.get(peer)} ({peer})")
                 self.connected_voice.itemconfig(0, {"fg": "green"})
 
         self.status_box.insert(2, "System (INFO): Voice Enabled.")

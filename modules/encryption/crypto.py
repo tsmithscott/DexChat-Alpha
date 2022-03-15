@@ -1,5 +1,5 @@
 import os
-from sys import platform
+import sys
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -10,7 +10,6 @@ from modules.encryption.keychain import Keychain
 
 class Crypto:
     def __init__(self):
-        self.priv_key = None
         self.pub_key = None
         self.pub_key_instance = None
 
@@ -20,7 +19,7 @@ class Crypto:
             if self.key_exists():
                 self.pub_key = self.keychain.fetch_pub()
             else:
-                if platform == "win32":
+                if sys.platform == "win32":
                     self.generate_key(1024)
                 else:
                     self.generate_key(4096)
@@ -29,16 +28,16 @@ class Crypto:
 
     def generate_key(self, size: int):
         # Generate key objects
-        self.priv_key = rsa.generate_private_key(
+        priv_key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=size,
             backend=default_backend()
         )
 
-        self.pub_key_instance = self.priv_key.public_key()
+        self.pub_key_instance = priv_key.public_key()
 
         # Generate key strings
-        self.priv_key = self.priv_key.private_bytes(
+        priv_key = priv_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption()
@@ -49,9 +48,9 @@ class Crypto:
             format=serialization.PublicFormat.PKCS1
         ).decode()
 
-        self.keychain.store_keys(self.pub_key, self.priv_key)
+        self.keychain.store_keys(self.pub_key, priv_key)
 
-        del self.priv_key
+        del priv_key
 
     @staticmethod
     def key_exists() -> bool:
@@ -96,7 +95,7 @@ class Crypto:
 
         return data
 
-    def decrypt(self, data: bytes) -> str:
+    def decrypt(self, data: bytes) -> bytes:
         key = self.load_priv_key()
         data = key.decrypt(
             data,
@@ -107,4 +106,4 @@ class Crypto:
             )
         )
 
-        return data.decode()
+        return data

@@ -89,13 +89,5 @@ class VoiceNetwork:
                 self.streamer_output.write(packet)
                 self.voice_frames.remove(packet)
 
-    def dispatch_peers(self):
-        """
-        Runs when called, creates peer discovery packet and attaches header. Sends to all current peers.
-
-        :return:
-        """
-        pass
-
     def die(self):
         self.ALIVE = False
