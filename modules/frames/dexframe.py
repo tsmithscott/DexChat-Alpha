@@ -123,8 +123,8 @@ class DexFrame(ttk.Frame):
 
             self.controller.VOICE_PEER_OBJECTS.append(voice_object)
 
-            threading.Thread(target=voice_object.server_receive, daemon=True).start()
-            threading.Thread(target=voice_object.client_send, daemon=True).start()
+            threading.Thread(target=voice_object.server_receive).start()
+            threading.Thread(target=voice_object.client_send).start()
             threading.Thread(target=voice_object.play_voice).start()
 
             if peer in self.controller.NICKS:
