@@ -10,6 +10,9 @@ from modules.encryption.keychain import Keychain
 
 class Crypto:
     def __init__(self):
+        if not os.path.exists("crypt"):
+            os.mkdir("crypt")
+
         self.pub_key = None
         self.pub_key_instance = None
 
