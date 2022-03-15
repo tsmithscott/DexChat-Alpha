@@ -75,6 +75,15 @@ class Crypto:
         else:
             pass
 
+    @staticmethod
+    def load_external_pub(pub_key):
+        external_pub = serialization.load_pem_public_key(
+            pub_key.encode(),
+            backend=default_backend()
+        )
+
+        return external_pub
+
     def load_priv_key(self):
         priv_key = serialization.load_pem_private_key(
             self.keychain.fetch_priv(self.pub_key).encode(),
@@ -84,10 +93,10 @@ class Crypto:
 
         return priv_key
 
-    def encrypt(self, data: str) -> bytes:
-        self.load_pub_key()
+    def encrypt(self, data: str, pub_key: str) -> bytes:
+        pub_key = self.load_external_pub(pub_key)
 
-        data = self.pub_key_instance.encrypt(
+        data = pub_key.encrypt(
             data.encode(),
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),

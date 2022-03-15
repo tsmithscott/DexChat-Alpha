@@ -137,6 +137,12 @@ class ChatNetwork:
                         else:
                             self.controller.NICKS[ip] = None
                             self.controller.dex_frame.connected_chat.insert(END, f"{ip}")
+                elif "/dispatch-key" in message.decode():
+                    key = message.decode().split("/dispatch-key+")[1]
+                    ip = connection.getpeername()[0]
+
+                    if ip not in self.controller.KEYS:
+                        self.controller.KEYS[ip] = key
 
                 # Output incoming message.
                 else:
@@ -172,7 +178,8 @@ class ChatNetwork:
             for address in self.peers:
                 self.peers.get(address).send(f"/nickname+{self.my_nick}".encode())
         elif message == "/dispatch-key":
-            print(f"/dispatch-key+{self.my_key}")
+            for address in self.peers:
+                self.peers.get(address).send(f"/dispatch-key+{self.my_key}".encode())
         # Broadcast message to current peer discovery.
         else:
             self.controller.dex_frame.chat_box.insert(END, f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
@@ -183,6 +190,8 @@ class ChatNetwork:
                     self.peers.get(address).send(
                         f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}".encode())
                 else:
+                    key = self.controller.KEYS.get(address)
+                    print(self.controller.CRYPTO_CONTROLLER.encrypt())
                     self.peers.get(address).send(
                         f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_nick}]: {message}".encode())
 
@@ -193,7 +202,6 @@ class ChatNetwork:
         :return:
         """
         for address in self.peers:
-            print(address)
             self.peers.get(address).send(("peer_filter+" + json.dumps(self.peer_filter)).encode())
 
     def connect(self, host, port):
