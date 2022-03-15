@@ -135,6 +135,8 @@ class DexFrame(ttk.Frame):
 
         for voice_objects in self.controller.VOICE_PEER_OBJECTS:
             voice_objects.die()
+            self.controller.VOICE_PEER_OBJECTS.remove(voice_objects)
+            del voice_objects
 
         self.status_box.insert(2, "System (INFO): Voice Disabled")
         self.status_box.itemconfig(2, {"fg": "red"})

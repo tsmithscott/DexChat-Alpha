@@ -85,7 +85,7 @@ class VoiceNetwork:
         while self.ALIVE:
             for packet in self.voice_frames:
                 self.streamer_output.write(packet)
-                self.voice_frames.pop(self.voice_frames.index(packet))
+                self.voice_frames.remove(packet)
 
     def dispatch_peers(self):
         """
