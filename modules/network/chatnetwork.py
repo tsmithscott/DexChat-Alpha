@@ -104,8 +104,8 @@ class ChatNetwork:
 
                     # Remove peer from current connections.
                     del self.peers[remote_ip]
-                    connected_ip = self.controller.dex_frame.connected_chat.get(0, END).index(f"{self.controller.NICKS[remote_ip]} ({remote_ip})")
-                    del self.controller.NICKS[remote_ip]
+                    connected_ip = self.controller.dex_frame.connected_chat.get(0, END).index(f"{self.nicks[remote_ip]} ({remote_ip})")
+                    del self.nicks[remote_ip]
                     self.controller.dex_frame.connected_chat.delete(connected_ip)
                     connection.close()
                     sys.exit()
@@ -127,12 +127,12 @@ class ChatNetwork:
                     nickname = message.decode().split("+")[1]
                     ip = connection.getpeername()[0]
 
-                    if ip not in self.controller.NICKS:
+                    if ip not in self.nicks:
                         if nickname != "None":
-                            self.controller.NICKS[ip] = nickname
+                            self.nicks[ip] = nickname
                             self.controller.dex_frame.connected_chat.insert(END, f"{nickname} ({ip})")
                         else:
-                            self.controller.NICKS[ip] = None
+                            self.nicks[ip] = None
                             self.controller.dex_frame.connected_chat.insert(END, f"{ip}")
 
                 # Output incoming message.
