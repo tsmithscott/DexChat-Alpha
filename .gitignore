@@ -116,5 +116,3 @@ dmypy.json
 # JetBrains
 .idea/
 
-# Application Specific
-crypt/

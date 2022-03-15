@@ -19,7 +19,7 @@ class ChatNetwork:
         # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
         self.my_ip = '100.67.164.33'  # TODO: REMOVE THIS AND CHANGE BACK TO IFCONFIG.ME IP
         self.my_nick = nick
-        self.my_key = self.controller.KEYCHAIN_CONTROLLER.fetch_pub()
+        self.my_key = self.controller.CRYPTO_CONTROLLER.pub_key()
 
         # Create ALIVE flag. server_accept will wait for this flag and gracefully close.
         self.ALIVE = True
@@ -77,6 +77,7 @@ class ChatNetwork:
                 # Broadcast a peer discovery.
                 self.dispatch_peers()
                 self.client_send("/nickname")
+                self.client_send("/dispatch-key")
 
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
@@ -169,6 +170,8 @@ class ChatNetwork:
         elif message == "/nickname":
             for address in self.peers:
                 self.peers.get(address).send(f"/nickname+{self.my_nick}".encode())
+        elif message == "/dispatch-key":
+            print(f"/dispatch-key+{self.my_key}")
         # Broadcast message to current peer discovery.
         else:
             self.controller.dex_frame.chat_box.insert(END, f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
