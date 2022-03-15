@@ -1,4 +1,5 @@
 import threading
+import socket
 from sys import platform
 from tkinter import ttk, Listbox, END, Label
 
@@ -9,6 +10,7 @@ class DexFrame(ttk.Frame):
     def __init__(self, controller, parent, **kwargs):
         ttk.Frame.__init__(self, parent, **kwargs)
         self.parent = parent
+        self.server = None
         self.controller = controller
 
         self.parent.protocol("WM_DELETE_WINDOW", self.controller.disconnect)
@@ -112,8 +114,12 @@ class DexFrame(ttk.Frame):
 
         current_chat_peers = self.controller.CHAT_CONTROLLER.get_peers()
 
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server.bind(("0.0.0.0", 25000))
+
         for peer in current_chat_peers:
-            voice_object = VoiceNetwork(peer, current_chat_peers.get(peer))
+            voice_object = VoiceNetwork(self.server, peer, current_chat_peers.get(peer))
 
             self.controller.VOICE_PEER_OBJECTS.append(voice_object)
 
@@ -137,6 +143,8 @@ class DexFrame(ttk.Frame):
             voice_objects.die()
             self.controller.VOICE_PEER_OBJECTS.remove(voice_objects)
             del voice_objects
+
+        self.server.close()
 
         self.status_box.insert(2, "System (INFO): Voice Disabled")
         self.status_box.itemconfig(2, {"fg": "red"})

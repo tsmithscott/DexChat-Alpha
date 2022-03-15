@@ -114,11 +114,15 @@ class ChatNetwork:
                 elif "peer_filter" in message.decode():
                     # Separate packet header and discovery data.
                     peer_filter = message.decode().split("+")[1]
+                    print(message)
                     peer_filter = json.loads(peer_filter)
+                    print(peer_filter)
 
                     # Filter through peer discovery json. If current peer is not in global discovery, connect and add.
                     for address in peer_filter:
+                        print("Testing: " + address)
                         if address not in self.peers and not address == self.my_ip:
+                            print("New Connection: " + address)
                             new_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                             new_client.connect((address, peer_filter.get(address)))
                             self.peers[address] = new_client
@@ -188,6 +192,7 @@ class ChatNetwork:
         :return:
         """
         for address in self.peers:
+            print(address)
             self.peers.get(address).send(("peer_filter+" + json.dumps(self.peer_filter)).encode())
 
     def connect(self, host, port):

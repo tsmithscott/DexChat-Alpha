@@ -4,7 +4,7 @@ import pyaudio
 
 
 class VoiceNetwork:
-    def __init__(self, host=None, port=None):
+    def __init__(self, server, host=None, port=None):
         # Fetch public IP. This can be from any server. Used to communicate connections and disconnects.
         # self.my_ip = requests.get("https://ifconfig.me/ip").text
 
@@ -20,9 +20,11 @@ class VoiceNetwork:
         self.port = port
 
         # Create a server socket to receive voice packets from other clients.
-        self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server.bind(("0.0.0.0", 25000))
+        # self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # self.server.bind(("0.0.0.0", 25000))
+
+        self.server = server
 
         # Create a client socket to send voice packets to other servers.
         self.client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
