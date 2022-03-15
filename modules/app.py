@@ -1,3 +1,4 @@
+import sys
 from tkinter import Tk, BooleanVar
 
 from modules.frames.startframe import StartFrame
@@ -57,10 +58,7 @@ class App:
 
     def disconnect(self):
         self.CHAT_CONTROLLER.client_send("/disconnect")
-        self.resize_root(275, 115)
-        self.dex_frame.destroy()
-        self.start_frame = StartFrame(self, self.root, width=275, height=115)
-        self.start_frame.place(x=0, y=0)
+        sys.exit()
 
     def cancel(self):
         self.resize_root(275, 115)
