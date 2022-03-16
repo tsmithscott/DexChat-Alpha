@@ -19,6 +19,7 @@ class App:
         self.root.call("set_theme", "dark")
 
         self.CHAT_CONTROLLER = None
+        self.VOICE_ENABLED = False
         self.VOICE_PEER_OBJECTS = []
         self.CRYPTO_CONTROLLER = Crypto()
         self.NICKS = {}
@@ -60,7 +61,8 @@ class App:
         self.root.geometry(f"{width}x{height}")
 
     def disconnect(self):
-        self.dex_frame.disable_voice()
+        if self.VOICE_ENABLED:
+            self.dex_frame.disable_voice()
         self.CHAT_CONTROLLER.client_send("/disconnect")
         sys.exit()
 

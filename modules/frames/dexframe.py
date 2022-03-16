@@ -135,6 +135,7 @@ class DexFrame(ttk.Frame):
         self.status_box.itemconfig(2, {"fg": "green"})
 
         self.voice_button.configure(text="Disable Voice", command=self.disable_voice)
+        self.controller.VOICE_ENABLED = True
 
     def disable_voice(self):
         self.status_box.delete(2)
@@ -152,6 +153,7 @@ class DexFrame(ttk.Frame):
         self.connected_voice.delete(0, END)
 
         self.voice_button.configure(text="Enable Voice", command=self.enable_voice)
+        self.controller.VOICE_ENABLED = False
 
     def send_message(self, event):
         message = self.message_entry.get()
