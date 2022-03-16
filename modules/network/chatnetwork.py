@@ -61,8 +61,8 @@ class ChatNetwork:
             # If a connection with this peer's server already exists (user may have connected first), create a thread to receive messages.
             # Threads are Daemon to prevent blocking.
             if address[0] in self.peers.keys():
+                print("Already connected to this peer.")
                 self.client_send("/nickname")
-                self.client_send("/dispatch-key")
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
 
@@ -78,7 +78,6 @@ class ChatNetwork:
                 # Broadcast a peer discovery.
                 self.dispatch_peers()
                 self.client_send("/nickname")
-                self.client_send("/dispatch-key")
 
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
@@ -94,7 +93,7 @@ class ChatNetwork:
         while True:
             try:
                 # Accept an incoming message. Buffer can be changed.
-                message = connection.recv(8192)
+                message = connection.recv(4096)
 
                 # If a message is a disconnect request.
                 if "/disconnect" in message.decode():
@@ -127,7 +126,9 @@ class ChatNetwork:
                             self.peers[address] = new_client
 
                 elif "/nickname" in message.decode():
-                    nickname = message.decode().split("+")[1]
+                    headers = message.decode().split("/dispatch-key+")
+                    nickname = headers[0].split("/nickname+")[1]
+                    key = headers[1]
                     ip = connection.getpeername()[0]
 
                     if ip not in self.controller.NICKS:
@@ -137,12 +138,16 @@ class ChatNetwork:
                         else:
                             self.controller.NICKS[ip] = None
                             self.controller.dex_frame.connected_chat.insert(END, f"{ip}")
-                elif "/dispatch-key" in message.decode():
-                    key = message.decode().split("/dispatch-key+")[1]
-                    ip = connection.getpeername()[0]
 
                     if ip not in self.controller.KEYS:
                         self.controller.KEYS[ip] = key
+
+                # elif "/dispatch-key" in message.decode():
+                #     key = message.decode().split("/dispatch-key+")[1]
+                #     ip = connection.getpeername()[0]
+                #
+                #     if ip not in self.controller.KEYS:
+                #         self.controller.KEYS[ip] = key
 
                 # Output incoming message.
                 else:
@@ -161,7 +166,6 @@ class ChatNetwork:
 
         :return:
         """
-
         # If disconnect request, attach public IP to packet and broadcast to current peer discovery.
         if message == "/disconnect":
             try:
@@ -176,10 +180,10 @@ class ChatNetwork:
                 print(error)
         elif message == "/nickname":
             for address in self.peers:
-                self.peers.get(address).send(f"/nickname+{self.my_nick}".encode())
-        elif message == "/dispatch-key":
-            for address in self.peers:
-                self.peers.get(address).send(f"/dispatch-key+{self.my_key}".encode())
+                self.peers.get(address).send(f"/nickname+{self.my_nick}/dispatch-key+{self.my_key}".encode())
+        # elif message == "/dispatch-key":
+        #     for address in self.peers:
+        #         self.peers.get(address).send(f"/dispatch-key+{self.my_key}".encode())
         # Broadcast message to current peer discovery.
         else:
             self.controller.dex_frame.chat_box.insert(END, f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
@@ -191,7 +195,7 @@ class ChatNetwork:
                         f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}".encode())
                 else:
                     key = self.controller.KEYS.get(address)
-                    print(self.controller.CRYPTO_CONTROLLER.encrypt())
+                    print(self.controller.CRYPTO_CONTROLLER.encrypt(message, key).decode(), key)
                     self.peers.get(address).send(
                         f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_nick}]: {message}".encode())
 
