@@ -94,7 +94,7 @@ class Crypto:
 
         return priv_key
 
-    def encrypt(self, data: str, pub_key: str) -> bytes:
+    def encrypt_text(self, data: str, pub_key: str) -> bytes:
         pub_key = self.load_external_pub(pub_key)
 
         data = pub_key.encrypt(
@@ -108,7 +108,21 @@ class Crypto:
 
         return base64.b64encode(data)
 
-    def decrypt(self, data: str) -> str:
+    def encrypt_voice(self, data: bytes, pub_key: str) -> bytes:
+        pub_key = self.load_external_pub(pub_key)
+
+        data = pub_key.encrypt(
+            data,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+
+        return data
+
+    def decrypt_text(self, data: str) -> str:
         key = self.load_priv_key()
 
         data = key.decrypt(
@@ -121,3 +135,17 @@ class Crypto:
         )
 
         return data.decode()
+
+    def decrypt_voice(self, data: bytes) -> bytes:
+        key = self.load_priv_key()
+
+        data = key.decrypt(
+            data,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+
+        return data
