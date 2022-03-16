@@ -1,5 +1,5 @@
 import sys
-from tkinter import Tk, BooleanVar
+from tkinter import Tk
 
 from modules.frames.startframe import StartFrame
 from modules.frames.connectframe import ConnectFrame
@@ -18,7 +18,6 @@ class App:
         self.root.call("source", "static/themes/azure.tcl")
         self.root.call("set_theme", "dark")
 
-        self.VOICE_ENABLED = BooleanVar(self.root)
         self.CHAT_CONTROLLER = None
         self.VOICE_PEER_OBJECTS = []
         self.CRYPTO_CONTROLLER = Crypto()
@@ -34,9 +33,9 @@ class App:
 
     def open_connect_frame(self):
         self.start_frame.destroy()
-        self.resize_root(250, 325)
+        self.resize_root(250, 275)
 
-        self.connect_frame = ConnectFrame(self, self.root, width=250, height=325)
+        self.connect_frame = ConnectFrame(self, self.root, width=250, height=275)
         self.connect_frame.place(x=0, y=0)
 
     def open_host_frame(self):

@@ -17,7 +17,6 @@ class ConnectFrame(ttk.Frame):
         self.ip_entry = ttk.Entry(self, width=10, justify="center")
         self.port_entry = ttk.Entry(self, width=10, justify="center")
         self.nickname_entry = ttk.Entry(self, width=10, justify="center")
-        self.voice_check = ttk.Checkbutton(self, text="Enable DexVoice", variable=self.controller.VOICE_ENABLED)
         self.start_button = ttk.Button(self, text="Connect", style="Accent.TButton", command=self.configure_dex_chat)
         self.cancel_button = ttk.Button(self, text="Cancel", command=self.controller.cancel)
 
@@ -25,9 +24,8 @@ class ConnectFrame(ttk.Frame):
         self.ip_entry.place(x=25, y=30, anchor="nw", width=200, height=40)
         self.port_entry.place(x=25, y=80, anchor="nw", width=200, height=40)
         self.nickname_entry.place(x=25, y=130, anchor="nw", width=200, height=40)
-        self.voice_check.place(x=65, y=185, anchor="nw")
-        self.start_button.place(x=125, y=230, anchor="n")
-        self.cancel_button.place(x=125, y=275, anchor="n")
+        self.start_button.place(x=125, y=185, anchor="n")
+        self.cancel_button.place(x=125, y=225, anchor="n")
 
         self.add_placeholder(self.ip_entry, "IP Address")
         self.add_placeholder(self.port_entry, "(default port 25000)")
