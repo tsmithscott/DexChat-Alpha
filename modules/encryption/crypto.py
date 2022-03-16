@@ -1,5 +1,6 @@
 import os
 import sys
+import base64
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -105,12 +106,13 @@ class Crypto:
             )
         )
 
-        return data
+        return base64.b64encode(data)
 
-    def decrypt(self, data: bytes) -> bytes:
+    def decrypt(self, data: str) -> str:
         key = self.load_priv_key()
+
         data = key.decrypt(
-            data,
+            base64.b64decode(data),
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),
@@ -118,4 +120,4 @@ class Crypto:
             )
         )
 
-        return data
+        return data.decode()

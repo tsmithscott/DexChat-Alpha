@@ -3,6 +3,7 @@ import sys
 import threading
 import json
 import datetime
+import base64
 
 from tkinter import END
 
@@ -61,7 +62,6 @@ class ChatNetwork:
             # If a connection with this peer's server already exists (user may have connected first), create a thread to receive messages.
             # Threads are Daemon to prevent blocking.
             if address[0] in self.peers.keys():
-                print("Already connected to this peer.")
                 self.client_send("/nickname")
                 initiate = threading.Thread(target=self.server_receive, args=(connection, address), daemon=True)
                 initiate.start()
@@ -151,7 +151,8 @@ class ChatNetwork:
 
                 # Output incoming message.
                 else:
-                    self.controller.dex_frame.chat_box.insert(END, f"{message.decode()}")
+                    message = self.controller.CRYPTO_CONTROLLER.decrypt(message.decode())
+                    self.controller.dex_frame.chat_box.insert(END, f"{message}")
                     self.controller.dex_frame.chat_box.yview(END)
 
             # Broken connection.
@@ -181,23 +182,26 @@ class ChatNetwork:
         elif message == "/nickname":
             for address in self.peers:
                 self.peers.get(address).send(f"/nickname+{self.my_nick}/dispatch-key+{self.my_key}".encode())
+
         # elif message == "/dispatch-key":
         #     for address in self.peers:
         #         self.peers.get(address).send(f"/dispatch-key+{self.my_key}".encode())
+
         # Broadcast message to current peer discovery.
         else:
             self.controller.dex_frame.chat_box.insert(END, f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [Me]: {message}")
             self.controller.dex_frame.chat_box.yview(END)
 
             for address in self.peers:
+                key = self.controller.KEYS.get(address)
                 if self.my_nick is None:
-                    self.peers.get(address).send(
-                        f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}".encode())
+                    message = f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}"
+                    message = self.controller.CRYPTO_CONTROLLER.encrypt(message, key)
+                    self.peers.get(address).send(message)
                 else:
-                    key = self.controller.KEYS.get(address)
-                    print(self.controller.CRYPTO_CONTROLLER.encrypt(message, key).decode(), key)
-                    self.peers.get(address).send(
-                        f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_nick}]: {message}".encode())
+                    message = f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_nick}]: {message}"
+                    message = self.controller.CRYPTO_CONTROLLER.encrypt(message, key)
+                    self.peers.get(address).send(message)
 
     def dispatch_peers(self):
         """
