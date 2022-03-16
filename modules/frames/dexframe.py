@@ -119,7 +119,7 @@ class DexFrame(ttk.Frame):
         self.server.bind(("0.0.0.0", 25000))
 
         for peer in current_chat_peers:
-            voice_object = VoiceNetwork(self.server, peer, current_chat_peers.get(peer))
+            voice_object = VoiceNetwork(self.controller, self.server, peer, current_chat_peers.get(peer))
 
             self.controller.VOICE_PEER_OBJECTS.append(voice_object)
 

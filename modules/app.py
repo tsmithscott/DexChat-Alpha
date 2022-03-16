@@ -61,6 +61,7 @@ class App:
         self.root.geometry(f"{width}x{height}")
 
     def disconnect(self):
+        self.dex_frame.disable_voice()
         self.CHAT_CONTROLLER.client_send("/disconnect")
         sys.exit()
 

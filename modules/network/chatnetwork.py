@@ -3,7 +3,6 @@ import sys
 import threading
 import json
 import datetime
-import base64
 
 from tkinter import END
 
@@ -151,7 +150,7 @@ class ChatNetwork:
 
                 # Output incoming message.
                 else:
-                    message = self.controller.CRYPTO_CONTROLLER.decrypt(message.decode())
+                    message = self.controller.CRYPTO_CONTROLLER.decrypt_text(message.decode())
                     self.controller.dex_frame.chat_box.insert(END, f"{message}")
                     self.controller.dex_frame.chat_box.yview(END)
 
@@ -196,11 +195,11 @@ class ChatNetwork:
                 key = self.controller.KEYS.get(address)
                 if self.my_nick is None:
                     message = f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_ip}]: {message}"
-                    message = self.controller.CRYPTO_CONTROLLER.encrypt(message, key)
+                    message = self.controller.CRYPTO_CONTROLLER.encrypt_text(message, key)
                     self.peers.get(address).send(message)
                 else:
                     message = f"{datetime.datetime.now().strftime('%d/%m/%Y - %H:%M:%S')} [{self.my_nick}]: {message}"
-                    message = self.controller.CRYPTO_CONTROLLER.encrypt(message, key)
+                    message = self.controller.CRYPTO_CONTROLLER.encrypt_text(message, key)
                     self.peers.get(address).send(message)
 
     def dispatch_peers(self):
